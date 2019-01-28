@@ -1,0 +1,3 @@
+﻿  dllmain.cpp
+c:\users\wawa\desktop\lol base\orbwalker.h(265): warning C4715: 'Orbwalker::getReductedPriority' : les chemins de contrôle ne retournent pas tous une valeur
+  LoL base.vcxproj -> C:\Users\Wawa\Desktop\Debug\LoL base.dll

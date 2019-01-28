@@ -1,0 +1,3 @@
+﻿dllmain.obj : error LNK2019: symbole externe non résolu DetourFunction référencé dans la fonction "void __cdecl Start(void)" (?Start@@YAXXZ)
+detours.lib : warning LNK4272: type d'ordinateur bibliothèque 'x86' en conflit avec le type d'ordinateur cible 'x64'
+C:\Users\Wawa\Desktop\x64\Debug\LoL base.dll : fatal error LNK1120: 1 externes non résolus
