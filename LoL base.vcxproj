@@ -156,6 +156,8 @@
     <ClInclude Include="Missile.h" />
     <ClInclude Include="Offsets.h" />
     <ClInclude Include="Orbwalker.h" />
+    <ClInclude Include="SpellData.h" />
+    <ClInclude Include="SpellInfo.h" />
     <ClInclude Include="SpellSlot.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />

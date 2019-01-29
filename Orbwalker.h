@@ -24,7 +24,7 @@ public:
 				CObject* obj = Engine::GetObjectByID(i);
 				if (obj) {
 					if (obj->IsHero() || obj->IsMinion() || obj->IsTurret() || obj->IsNexus()) {
-						if (obj->IsAlive() && obj->IsVisible() && obj->GetTeam() != me->GetTeam()) {
+						if (obj->IsAlive() && obj->IsVisible() && obj->GetTeam() != me->GetTeam() && obj->GetHealth()>2) {
 							if (me->GetPos().DistTo(obj->GetPos()) < me->GetAttackRange() + me->GetBoundingRadius() + obj->GetBoundingRadius()) {
 								objets.push_back(obj);
 							}
@@ -79,8 +79,10 @@ public:
 		if (ObjManager) {
 			for (int i = 0; i < 10000; i++) {
 				CObject* obj = Engine::GetObjectByID(i);
+				
 				if (obj) {
 					if (Functions.IsMissile(obj)) {
+						//Console.print("%s", obj->GetName());
 						objets.push_back((Missile*)obj);
 					}
 				}
@@ -100,6 +102,31 @@ public:
 
 		return (minion->GetHealth() - (adMultiplier*me->GetTotalAttackDamage()) <= 0);
 	};
+
+	bool KSable(CObject* minion, float damage, int type) {
+		if (type == 1) {
+			float adMultiplier = 0.0f;
+			float armor = minion->GetArmor();
+
+			if (armor > 0)
+				adMultiplier = 100 / (100 + armor);
+			else
+				adMultiplier = 2 - (100 / (100 - armor));
+
+			return (minion->GetHealth() - damage <= 0);
+		}
+		else {
+			float adMultiplier = 0.0f;
+			float armor = 100.0f;
+
+			if (armor > 0)
+				adMultiplier = 100 / (100 + armor);
+			else
+				adMultiplier = 2 - (100 / (100 - armor));
+
+			return (minion->GetHealth() - damage <= 0);
+		}
+	}
 
 	std::vector<CObject*> GetHeroes() {
 		std::vector<CObject*> objets;
@@ -284,14 +311,45 @@ public:
 		return selected;
 	};
 
+	bool isPartOf(char* w1, char* w2)
+	{
+		int i = 0;
+		int j = 0;
+
+
+		while (w1[i] != '\0') {
+			if (w1[i] == w2[j])
+			{
+				int init = i;
+				while (w1[i] == w2[j] && w2[j] != '\0')
+				{
+					j++;
+					i++;
+				}
+				if (w2[j] == '\0') {
+					return true;
+				}
+				j = 0;
+			}
+			i++;
+		}
+		return false;
+	}
+
 	CObject* GetLastHittableMinion() {
 		std::vector<CObject*> objectsInRange = getAttackableUnitInRange();
 		for (CObject* minion : objectsInRange) {
 			float hPred = minion->GetHealth();
 			for (Missile* missile : GetMissile()) {
 				if (missile->GetSpellEndPos().DistTo(minion->GetPos()) < 50) {
+					if (isPartOf("MinionSiege", missile->GetName())) {
+						hPred -= (39.5f + 1.5f * (Engine::GetGameTime() / 90.0f));
+					}
+					else {
+						hPred -= (25.0f + 2 * (Engine::GetGameTime() / 180.0f));
+					}
 					//Console.print("Hpred: %f \n", hPred);
-					hPred -= (25.0f + 2*(Engine::GetGameTime()/180.0f));
+					
 				}
 			}
 
@@ -364,17 +422,36 @@ public:
 			/*if (me->GetSpellBook().GetSpellSlotByID(0)->GetTime() == 0) {
 				me->CastSpellTarget(GetTarget(GetHeroes()), 0);
 			}*/
-
+			Console.print("%s", me->GetChampionName());
 			//TRISTANA COMBO
-			/*if (me->GetLevel() >= 2)
-				Engine::CastSpellSelf(0);
+			if (isPartOf("Tristana", me->GetChampionName())) {
+				if (Engine::IsReady(0, me))
+					Engine::CastSpellSelf(0);
 
-			Engine::CastSpellTargetted(2, GetTarget(GetHeroes()));
+				if (Engine::IsReady(2, me))
+					Engine::CastSpellTargetted(2, GetTarget(GetHeroes()));
 
-			if (GetTarget(GetHeroes())->GetHealth() / GetTarget(GetHeroes())->GetMaxHealth() < 0.2 && me->GetLevel()>=6) {
-				Engine::CastSpellTargetted(3, GetTarget(GetHeroes()));
+				if (GetTarget(GetHeroes())->GetHealth() / GetTarget(GetHeroes())->GetMaxHealth() < 0.1f && (Engine::IsReady(3, me))) {
+					if (me->GetSpellBook()->GetSpellSlotByID(3)->GetLevel() == 1 && KSable(GetTarget(GetHeroes()), 300, 0)) {
+						Engine::CastSpellTargetted(3, GetTarget(GetHeroes()));
+					}
+					else if (me->GetSpellBook()->GetSpellSlotByID(3)->GetLevel() == 2 && KSable(GetTarget(GetHeroes()), 400, 0)) {
+						Engine::CastSpellTargetted(3, GetTarget(GetHeroes()));
+					}
+					else if (me->GetSpellBook()->GetSpellSlotByID(3)->GetLevel() == 3 && KSable(GetTarget(GetHeroes()), 500, 0)) {
+						Engine::CastSpellTargetted(3, GetTarget(GetHeroes()));
+					}
+				}
+				
 			}
-			*/
+			else if (isPartOf("Twitch",me->GetChampionName())) {
+				if (Engine::IsReady(1,me))
+					Engine::CastSpellPos(1, GetTarget(GetHeroes())->GetPos());
+			}
+			else if (isPartOf("Vayne", me->GetChampionName())) {
+				
+			}
+
 			Orbwalk(GetTarget(GetHeroes()), 1);
 		}
 		else {

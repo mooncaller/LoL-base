@@ -87,6 +87,12 @@
     <ClInclude Include="BuffEntry.h">
       <Filter>Arquivos de Cabeçalho\Objects</Filter>
     </ClInclude>
+    <ClInclude Include="SpellInfo.h">
+      <Filter>Arquivos de Cabeçalho\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="SpellData.h">
+      <Filter>Arquivos de Cabeçalho\Objects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LoL base.cpp">

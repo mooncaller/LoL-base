@@ -13,4 +13,7 @@ public:
 	Vector GetSpellEndPos() {
 		return *(Vector*)((DWORD)this + missileEndPos);
 	}
+	char* GetName() {
+		return GetStr((DWORD)this + oObjName);
+	}
 };

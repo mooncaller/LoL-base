@@ -80,5 +80,13 @@ public:
 			Functions.CastSpell(spellbook, spellslot, SlotID, &obj->GetPos(), &me->GetPos(), obj->GetNetworkID());
 	}
 
+	static float Engine::getCD(int slot, CObject* obj) {
+		//Console.print("CD : %f", obj->GetSpellBook()->GetSpellSlotByID(slot)->GetCD() - Engine::GetGameTime());
+		return obj->GetSpellBook()->GetSpellSlotByID(slot)->GetCD();
+	}
 
+	static bool Engine::IsReady(int slot, CObject* obj) {
+		//Console.print("LEVEL : %i", obj->GetSpellBook()->GetSpellSlotByID(slot)->GetLevel());
+		return obj->GetSpellBook()->GetSpellSlotByID(slot)->GetLevel() >= 1 && getCD(slot, obj) == 0.0f;
+	}
 };

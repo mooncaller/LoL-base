@@ -14,4 +14,9 @@ public:
 		}
 		return NULL;
 	}
+
+	bool isAutoAttack() {
+			return *(bool*)((DWORD)this + 0x4CC);
+	
+	}
 };
