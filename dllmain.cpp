@@ -18,13 +18,16 @@ typedef HRESULT(WINAPI *Prototype_Present)(DWORD, CONST RECT*, CONST RECT*, HWND
 Prototype_Present Original_Present;
 
 HRESULT WINAPI Hooked_Present(DWORD Device, CONST RECT *pSrcRect, CONST RECT *pDestRect, HWND hDestWindow, CONST RGNDATA *pDirtyRegion) {
+	/*if (me->GetSpellBook()->GetActiveSpellEntry()) {
+		Console.print("Missile speed : %f", me->GetSpellBook()->GetActiveSpellEntry()->GetSpellData()->GetMissileSpeed());
+	}*/
 	if (GetAsyncKeyState(VK_SPACE) < 0)
 	{
+			//Console.print("Missile speed : %s", me->GetSpellBook()->GetSpellSlotByID(0)->GetSpellData()->GetSpellName());
 		if (me) {
 			if (!bInit) {
 				bInit = true;
 			}
-
 			if (me->IsAlive()) {
 				orb->Combo();
 			}

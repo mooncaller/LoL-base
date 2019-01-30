@@ -82,7 +82,7 @@ public:
 		}
 		return objets;
 	};
-
+	float missileSpeed = 1800.0f;
 	double ClickerDelay = 0.1;
 	float movetimer = 0;
 	float attacktimer = 0;
@@ -383,22 +383,50 @@ public:
 		return false;
 	}
 
-	CObject* GetLastHittableMinion() {
+	float GetPredictedDamages(CObject* minion, float time){
+		float hpPred = 0;
+		if (ObjManager) {
+			for (int i = 0; i < 10000; i++) {
+
+				CObject* obj = Engine::GetObjectByID(i);
+				if (obj) {
+					if (obj->IsMinion()) {
+						if (obj->GetSpellBook()) {
+							if (obj->GetSpellBook()->GetActiveSpellEntry()) {
+								if (obj->GetSpellBook()->GetActiveSpellEntry()->targetID() == minion->GetNetworkID() && obj->GetSpellBook()->GetActiveSpellEntry()->isAutoAttack()) {
+
+									if (obj->GetAttackRange() < 150.0f) {
+										hpPred += obj->GetTotalAttackDamage();
+									}
+									else {
+										float MissileSpeed = obj->GetSpellBook()->GetActiveSpellEntry()->GetSpellData()->GetMissileSpeed();
+										float timeImpact = ((obj->GetSpellBook()->GetActiveSpellEntry()->GetStartPos().DistTo(obj->GetSpellBook()->GetActiveSpellEntry()->GetEndPos())) - obj->GetBoundingRadius()) / MissileSpeed;
+										if (0 < time) {
+											hpPred += obj->GetTotalAttackDamage();
+										}
+									}
+
+
+								}
+							}
+						}
+
+				}
+					}
+
+				}
+			}
+			return hpPred;
+		}
+
+	CObject* GetLastHittableMinion() {		
+
 		std::vector<CObject*> objectsInRange = getAttackableUnitInRange();
 		for (CObject* minion : objectsInRange) {
 			float hPred = minion->GetHealth();
-			for (Missile* missile : GetMissile()) {
-				if (missile->GetSpellEndPos().DistTo(minion->GetPos()) < 50) {
-					if (isPartOf("MinionSiege", missile->GetName())) {
-						hPred -= (39.5f + 1.5f * (Engine::GetGameTime() / 90.0f));
-					}
-					else {
-						hPred -= (25.0f + 2 * (Engine::GetGameTime() / 180.0f));
-					}
-					//Console.print("Hpred: %f \n", hPred);
-					
-				}
-			}
+			float lasthittime = me->GetPos().DistTo(minion->GetPos()) / this->missileSpeed + CalcAttackCast();
+			hPred -= KSable(minion,GetPredictedDamages(minion, lasthittime),1);
+
 
 			if (hPred <= 0 || isLastHittable(minion)) {
 				return minion;
@@ -416,7 +444,13 @@ public:
 		else {
 			if (AttackReady() && getAttackableUnitInRange().size() > 0)
 			{
+					
 					Engine::Attack(Target, 1);
+					if (me->GetSpellBook()->GetActiveSpellEntry()) {
+						if (me->GetSpellBook()->GetActiveSpellEntry()->isAutoAttack()) {
+							this->missileSpeed = me->GetSpellBook()->GetActiveSpellEntry()->GetSpellData()->GetMissileSpeed();
+						}
+					}
 					ResetAttackTimer();
 			}
 			if (!AttackReady() && getAttackableUnitInRange().size() > 0)
@@ -509,7 +543,12 @@ public:
 				if (Engine::IsReady(2, me))
 					Engine::CastSpellTargetted(2, GetTarget(GetHeroes()));
 			}
-			
+			else if (isPartOf("Miss", me->GetChampionName())) {
+				if (Engine::IsReady(0, me))
+					Engine::CastSpellTargetted(0, GetTarget(GetHeroes()));
+				if (Engine::IsReady(1, me))
+					Engine::CastSpellSelf(1);
+			}
 			Orbwalk(GetTarget(GetHeroes()), 1);
 		}
 		else {
@@ -523,4 +562,5 @@ public:
 	};
 
 };
+
 

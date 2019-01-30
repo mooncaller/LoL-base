@@ -15,8 +15,14 @@ public:
 		return *(float*)((DWORD)this + 0x18);
 	}
 
-	SpellInfo* GetSpellInfo() {
-		return (SpellInfo*)((DWORD)this + 0x124);
+	SpellData* GetSpellData() {
+		auto retaddr = *(DWORD*)(this + 0x124);
+		if (retaddr == NULL)
+			return NULL;
+		auto ret = *(DWORD*)(retaddr + 0x38);
+		if (ret == NULL)
+			return NULL;
+		return (SpellData*)(ret);
 	}
 
 
