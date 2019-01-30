@@ -66,6 +66,10 @@ public:
 		return *(float*)((DWORD)this + oObjAtkRange);
 	}
 
+	float GetMoveSpeed() {
+		return *(float*)((DWORD)this + oObjMoveSpeed);
+	}
+
 	bool IsVisible() {
 		return *(bool*)((DWORD)this + oObjVisibility);
 	}
@@ -96,6 +100,8 @@ public:
 	int GetTeam() {
 		return *(int*)((DWORD)this + oObjTeam);
 	}
+
+
 
 	CSpellBook* GetSpellBook() {
 		return (CSpellBook*)((DWORD)this + oObjSpellBook);

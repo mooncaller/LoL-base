@@ -9,11 +9,56 @@
 #include <vector>
 #include <iostream>
 #include <map>
+#include <stdlib.h>
+#include <string>
 using namespace std;
 class Orbwalker
 {
 public:
+	// Function to convert hexadecimal to decimal 
+	int hexadecimalToDecimal(char hexVal[])
+	{
+		int len = strlen(hexVal);
 
+		// Initializing base value to 1, i.e 16^0 
+		int base = 1;
+
+		int dec_val = 0;
+
+		// Extracting characters as digits from last character 
+		for (int i = len - 1; i >= 0; i--)
+		{
+			// if character lies in '0'-'9', converting  
+			// it to integral 0-9 by subtracting 48 from 
+			// ASCII value. 
+			if (hexVal[i] >= '0' && hexVal[i] <= '9')
+			{
+				dec_val += (hexVal[i] - 48)*base;
+
+				// incrementing base by power 
+				base = base * 16;
+			}
+
+			// if character lies in 'A'-'F' , converting  
+			// it to integral 10 - 15 by subtracting 55  
+			// from ASCII value 
+			else if (hexVal[i] >= 'A' && hexVal[i] <= 'F')
+			{
+				dec_val += (hexVal[i] - 55)*base;
+
+				// incrementing base by power 
+				base = base * 16;
+			}
+		}
+
+		return dec_val;
+	}
+
+	bool ObjectAttacking(CObject* obj) {
+		if (obj->GetSpellBook()->GetActiveSpellEntry()) {
+			return obj->GetSpellBook()->GetActiveSpellEntry()->isAutoAttack();
+		}
+	}
 
 	CObjectManager* ObjManager;
 
@@ -21,15 +66,17 @@ public:
 		std::vector<CObject*> objets;
 		if (ObjManager) {
 			for (int i = 0; i < 10000; i++) {
+
 				CObject* obj = Engine::GetObjectByID(i);
 				if (obj) {
 					if (obj->IsHero() || obj->IsMinion() || obj->IsTurret() || obj->IsNexus()) {
-						if (obj->IsAlive() && obj->IsVisible() && obj->GetTeam() != me->GetTeam() && obj->GetHealth()>2) {
+						if (obj->IsAlive() && obj->IsVisible() && obj->GetTeam() != me->GetTeam() && obj->IsTargetable() && obj->GetMaxHealth()<15000.0f) {
 							if (me->GetPos().DistTo(obj->GetPos()) < me->GetAttackRange() + me->GetBoundingRadius() + obj->GetBoundingRadius()) {
 								objets.push_back(obj);
 							}
 						}
 					}
+
 				}
 			}
 		}
@@ -422,7 +469,7 @@ public:
 			/*if (me->GetSpellBook().GetSpellSlotByID(0)->GetTime() == 0) {
 				me->CastSpellTarget(GetTarget(GetHeroes()), 0);
 			}*/
-			Console.print("%s", me->GetChampionName());
+			//Console.print("%s", me->GetChampionName());
 			//TRISTANA COMBO
 			if (isPartOf("Tristana", me->GetChampionName())) {
 				if (Engine::IsReady(0, me))
@@ -445,13 +492,24 @@ public:
 				
 			}
 			else if (isPartOf("Twitch",me->GetChampionName())) {
+				//if (Engine::IsReady(1,me))
+					//Engine::CastSpellPos(1, GetTarget(GetHeroes())->GetPos());
+			}
+			else if (isPartOf("Ashe", me->GetChampionName())) {
 				if (Engine::IsReady(1,me))
-					Engine::CastSpellPos(1, GetTarget(GetHeroes())->GetPos());
+					Engine::CastSpellPos(1, GetTarget(GetHeroes())->GetPos());		
 			}
-			else if (isPartOf("Vayne", me->GetChampionName())) {
-				
+			else if (isPartOf("Kayle", me->GetChampionName())) {
+				if (Engine::IsReady(0, me))
+					Engine::CastSpellTargetted(0, GetTarget(GetHeroes()));
+				if (Engine::IsReady(2, me))
+					Engine::CastSpellSelf(2);
 			}
-
+			else if (isPartOf("Quinn", me->GetChampionName())) {
+				if (Engine::IsReady(2, me))
+					Engine::CastSpellTargetted(2, GetTarget(GetHeroes()));
+			}
+			
 			Orbwalk(GetTarget(GetHeroes()), 1);
 		}
 		else {

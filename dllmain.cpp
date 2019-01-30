@@ -18,13 +18,10 @@ typedef HRESULT(WINAPI *Prototype_Present)(DWORD, CONST RECT*, CONST RECT*, HWND
 Prototype_Present Original_Present;
 
 HRESULT WINAPI Hooked_Present(DWORD Device, CONST RECT *pSrcRect, CONST RECT *pDestRect, HWND hDestWindow, CONST RGNDATA *pDirtyRegion) {
-	Console.print("%b", me->GetSpellBook()->GetActiveSpellEntry()->isAutoAttack());
-	//Console.print("%f", me->GetSpellBook()->GetSpellSlotByID(0)->GetSpellData()->GetSpellData()->GetMissileSpeed());
 	if (GetAsyncKeyState(VK_SPACE) < 0)
 	{
 		if (me) {
 			if (!bInit) {
-				//Console.print("Local player's name: %s | Champion: %s | HP: %f\n", me->GetName(), me->GetChampionName(), me->GetHealth());
 				bInit = true;
 			}
 
@@ -32,6 +29,8 @@ HRESULT WINAPI Hooked_Present(DWORD Device, CONST RECT *pSrcRect, CONST RECT *pD
 				orb->Combo();
 			}
 		}
+
+
 
 
 	}
@@ -72,7 +71,7 @@ DWORD GetDeviceAddress(int VTableIndex)
 }
 
 void __stdcall Start() {
-	Console.startConsoleWin(80, 25, NULL);
+	//Console.startConsoleWin(80, 25, NULL);
 
 	while (Engine::GetGameTime() < 1.0f || !me)
 		Sleep(1);

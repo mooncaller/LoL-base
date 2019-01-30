@@ -15,7 +15,7 @@ public:
 		return *(float*)((DWORD)this + 0x18);
 	}
 
-	SpellInfo* GetSpellData() {
+	SpellInfo* GetSpellInfo() {
 		return (SpellInfo*)((DWORD)this + 0x124);
 	}
 
