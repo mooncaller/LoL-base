@@ -11,6 +11,9 @@
 #include <map>
 #include <stdlib.h>
 #include <string>
+#include <math.h>
+
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
 using namespace std;
 class Orbwalker
 {
@@ -401,7 +404,7 @@ public:
 									else {
 										float MissileSpeed = obj->GetSpellBook()->GetActiveSpellEntry()->GetSpellData()->GetMissileSpeed();
 										float timeImpact = ((obj->GetSpellBook()->GetActiveSpellEntry()->GetStartPos().DistTo(obj->GetSpellBook()->GetActiveSpellEntry()->GetEndPos())) - obj->GetBoundingRadius()) / MissileSpeed;
-										if (0 < time) {
+										if (timeImpact < time) {
 											hpPred += obj->GetTotalAttackDamage();
 										}
 									}
@@ -424,7 +427,8 @@ public:
 		std::vector<CObject*> objectsInRange = getAttackableUnitInRange();
 		for (CObject* minion : objectsInRange) {
 			float hPred = minion->GetHealth();
-			float lasthittime = me->GetPos().DistTo(minion->GetPos()) / this->missileSpeed + CalcAttackCast();
+
+			float lasthittime = MAX((me->GetPos().DistTo(minion->GetPos())-me->GetBoundingRadius()),0) / this->missileSpeed + CalcAttackCast() - 0.07f;
 			hPred -= KSable(minion,GetPredictedDamages(minion, lasthittime),1);
 
 
@@ -469,6 +473,7 @@ public:
 			}
 		}
 	};
+
 
 	void LaneClear() {
 		if (GetLastHittableMinion()) {

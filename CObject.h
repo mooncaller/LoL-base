@@ -5,6 +5,7 @@
 #include "Utils.h"
 #include "CSpellBook.h"
 #include "BuffManager.h"
+#include "AIManager.h"
 class CObject {
 public:
 	bool IsTurret();
@@ -109,5 +110,11 @@ public:
 
 	BuffManager* GetBuffManager() {
 		return (BuffManager*)((DWORD)this + oObjBuffMgr);
+	}
+
+	//In your object class
+	AIManager* GetAIManager() {
+		typedef AIManager*(__thiscall* OriginalFn)(PVOID);
+		return CallVirtual<OriginalFn>(this, 147)(this);
 	}
 };

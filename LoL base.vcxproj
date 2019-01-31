@@ -144,6 +144,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AIManager.h" />
     <ClInclude Include="BuffEntry.h" />
     <ClInclude Include="BuffManager.h" />
     <ClInclude Include="CObject.h" />
@@ -156,6 +157,7 @@
     <ClInclude Include="Missile.h" />
     <ClInclude Include="Offsets.h" />
     <ClInclude Include="Orbwalker.h" />
+    <ClInclude Include="Prediction.h" />
     <ClInclude Include="SpellData.h" />
     <ClInclude Include="SpellInfo.h" />
     <ClInclude Include="SpellSlot.h" />
@@ -165,6 +167,7 @@
     <ClInclude Include="Vector.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AIManager.cpp" />
     <ClCompile Include="BuffEntry.cpp" />
     <ClCompile Include="BuffManager.cpp" />
     <ClCompile Include="CObject.cpp" />
@@ -188,6 +191,7 @@
     <ClCompile Include="LoL base.cpp" />
     <ClCompile Include="Missile.cpp" />
     <ClCompile Include="Orbwalker.cpp" />
+    <ClCompile Include="Prediction.cpp" />
     <ClCompile Include="SpellSlot.cpp" />
     <ClCompile Include="stdafx.cpp" />
   </ItemGroup>

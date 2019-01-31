@@ -23,7 +23,7 @@ HRESULT WINAPI Hooked_Present(DWORD Device, CONST RECT *pSrcRect, CONST RECT *pD
 	}*/
 	if (GetAsyncKeyState(VK_SPACE) < 0)
 	{
-			//Console.print("Missile speed : %s", me->GetSpellBook()->GetSpellSlotByID(0)->GetSpellData()->GetSpellName());
+			Console.print("Missile speed : %f", me->GetAIManager()->GetVelocity());
 		if (me) {
 			if (!bInit) {
 				bInit = true;
@@ -74,7 +74,7 @@ DWORD GetDeviceAddress(int VTableIndex)
 }
 
 void __stdcall Start() {
-	//Console.startConsoleWin(80, 25, NULL);
+	Console.startConsoleWin(80, 25, NULL);
 
 	while (Engine::GetGameTime() < 1.0f || !me)
 		Sleep(1);

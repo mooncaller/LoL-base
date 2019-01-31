@@ -93,6 +93,12 @@
     <ClInclude Include="SpellData.h">
       <Filter>Arquivos de Cabeçalho\Objects</Filter>
     </ClInclude>
+    <ClInclude Include="AIManager.h">
+      <Filter>Arquivos de Cabeçalho\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Prediction.h">
+      <Filter>Arquivos de Cabeçalho\Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LoL base.cpp">
@@ -129,6 +135,12 @@
       <Filter>Arquivos de Origem</Filter>
     </ClCompile>
     <ClCompile Include="BuffEntry.cpp">
+      <Filter>Arquivos de Origem</Filter>
+    </ClCompile>
+    <ClCompile Include="Prediction.cpp">
+      <Filter>Arquivos de Origem</Filter>
+    </ClCompile>
+    <ClCompile Include="AIManager.cpp">
       <Filter>Arquivos de Origem</Filter>
     </ClCompile>
   </ItemGroup>
