@@ -1,12 +1,13 @@
 #pragma once
 #include "Offsets.h"
 #include <Windows.h>
+#include "Vector.h"
 class AIManager
 {
 public:
 
-	float GetVelocity() {
-		return *(float*)((DWORD)this + O_AIMGR_VELOCITY);
+     Vector GetVelocity() {
+		return *(Vector*)((DWORD)this + O_AIMGR_VELOCITY);
 	}
 
 };

@@ -1,4 +1,5 @@
 ﻿  dllmain.cpp
-c:\users\wawa\desktop\lol base\orbwalker.h(431): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
-c:\users\wawa\desktop\lol base\orbwalker.h(342): warning C4715: 'Orbwalker::getReductedPriority' : les chemins de contrôle ne retournent pas tous une valeur
+c:\users\wawa\desktop\lol base\prediction.h(17): warning C4091: 'static ' : ignoré à gauche de 'LinePrediction::LineInfo_t' quand aucune variable n'est déclarée
+c:\users\wawa\desktop\lol base\orbwalker.h(434): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+c:\users\wawa\desktop\lol base\orbwalker.h(345): warning C4715: 'Orbwalker::getReductedPriority' : les chemins de contrôle ne retournent pas tous une valeur
   LoL base.vcxproj -> C:\Users\Wawa\Desktop\Debug\LoL base.dll

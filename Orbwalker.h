@@ -12,7 +12,8 @@
 #include <stdlib.h>
 #include <string>
 #include <math.h>
-
+#include "Prediction.h"
+#include <d3d9.h>
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 using namespace std;
 class Orbwalker
@@ -64,6 +65,8 @@ public:
 	}
 
 	CObjectManager* ObjManager;
+
+	Prediction* pred = new Prediction();
 
 	std::vector<CObject*> getAttackableUnitInRange() {
 		std::vector<CObject*> objets;
@@ -428,7 +431,7 @@ public:
 		for (CObject* minion : objectsInRange) {
 			float hPred = minion->GetHealth();
 
-			float lasthittime = MAX((me->GetPos().DistTo(minion->GetPos())-me->GetBoundingRadius()),0) / this->missileSpeed + CalcAttackCast() - 0.07f;
+			float lasthittime = MAX((me->GetPos().DistTo(minion->GetPos())-me->GetBoundingRadius()),0) / this->missileSpeed + CalcAttackCast() - 0.1f;
 			hPred -= KSable(minion,GetPredictedDamages(minion, lasthittime),1);
 
 
@@ -504,6 +507,8 @@ public:
 	}
 
 	void Combo() {
+		Engine* engine = new Engine();
+		Console.print("Me pos : %f %f", engine->WorldToScreen(D3DXVECTOR3(me->GetPos().X, me->GetPos().Y, me->GetPos().Z)).x, engine->WorldToScreen(D3DXVECTOR3(me->GetPos().X, me->GetPos().Y, me->GetPos().Z)).y);
 		if (GetTarget(GetHeroes())) {
 			/*if (me->GetSpellBook().GetSpellSlotByID(0)->GetTime() == 0) {
 				me->CastSpellTarget(GetTarget(GetHeroes()), 0);
@@ -548,11 +553,40 @@ public:
 				if (Engine::IsReady(2, me))
 					Engine::CastSpellTargetted(2, GetTarget(GetHeroes()));
 			}
-			else if (isPartOf("Miss", me->GetChampionName())) {
+			else if (isPartOf("MissFortune", me->GetChampionName())) {
 				if (Engine::IsReady(0, me))
 					Engine::CastSpellTargetted(0, GetTarget(GetHeroes()));
 				if (Engine::IsReady(1, me))
 					Engine::CastSpellSelf(1);
+			}
+			else if (isPartOf("Ezreal", me->GetChampionName())) {
+
+				auto pred = new Prediction(new LinePrediction());
+				if (!pred->IsCollisioned(Prediction::CollisionType::Minion, GetTarget(GetHeroes())->GetPos(), 100))
+				{
+				Vector Predict = pred->LinePred->Predict(GetTarget(GetHeroes()), 1150, 2200, 0.1f);
+				if (Predict.X != 0 && Predict.Y != 0 && Predict.Z != 0) {
+					if (Engine::IsReady(0, me))
+						Engine::CastSpellPos(0, Predict);
+				}
+
+				}
+
+
+
+			}
+			else if (isPartOf("Caitlyn", me->GetChampionName())) {
+
+
+					auto pred = new Prediction(new LinePrediction());
+
+
+					Vector Predict = pred->LinePred->Predict(GetTarget(GetHeroes()), 1250, 2200, 0.555f);
+					if (Predict.X != 0 && Predict.Y != 0 && Predict.Z != 0) {
+						if (Engine::IsReady(0, me))
+							Engine::CastSpellPos(0, Predict);
+					}
+			
 			}
 			Orbwalk(GetTarget(GetHeroes()), 1);
 		}

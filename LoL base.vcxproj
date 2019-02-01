@@ -72,6 +72,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(DXSDK_DIR)Include</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(DXSDK_DIR)Lib\x86</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -158,6 +160,7 @@
     <ClInclude Include="Offsets.h" />
     <ClInclude Include="Orbwalker.h" />
     <ClInclude Include="Prediction.h" />
+    <ClInclude Include="Renderer.h" />
     <ClInclude Include="SpellData.h" />
     <ClInclude Include="SpellInfo.h" />
     <ClInclude Include="SpellSlot.h" />
@@ -192,6 +195,7 @@
     <ClCompile Include="Missile.cpp" />
     <ClCompile Include="Orbwalker.cpp" />
     <ClCompile Include="Prediction.cpp" />
+    <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="SpellSlot.cpp" />
     <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
