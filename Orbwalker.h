@@ -66,8 +66,7 @@ public:
 
 	CObjectManager* ObjManager;
 
-	Prediction* pred = new Prediction();
-
+	 Prediction* pred = new Prediction(new LinePrediction());
 	std::vector<CObject*> getAttackableUnitInRange() {
 		std::vector<CObject*> objets;
 		if (ObjManager) {
@@ -405,7 +404,7 @@ public:
 										hpPred += obj->GetTotalAttackDamage();
 									}
 									else {
-										float MissileSpeed = obj->GetSpellBook()->GetActiveSpellEntry()->GetSpellData()->GetMissileSpeed();
+										float MissileSpeed = obj->GetSpellBook()->GetActiveSpellEntry()->GetSpellData()->MissileSpeed;
 										float timeImpact = ((obj->GetSpellBook()->GetActiveSpellEntry()->GetStartPos().DistTo(obj->GetSpellBook()->GetActiveSpellEntry()->GetEndPos())) - obj->GetBoundingRadius()) / MissileSpeed;
 										if (timeImpact < time) {
 											hpPred += obj->GetTotalAttackDamage();
@@ -431,7 +430,7 @@ public:
 		for (CObject* minion : objectsInRange) {
 			float hPred = minion->GetHealth();
 
-			float lasthittime = MAX((me->GetPos().DistTo(minion->GetPos())-me->GetBoundingRadius()),0) / this->missileSpeed + CalcAttackCast() - 0.1f;
+			float lasthittime = MAX((me->GetPos().DistTo(minion->GetPos())-me->GetBoundingRadius()),0) / this->missileSpeed + CalcAttackCast();
 			hPred -= KSable(minion,GetPredictedDamages(minion, lasthittime),1);
 
 
@@ -455,7 +454,7 @@ public:
 					Engine::Attack(Target, 1);
 					if (me->GetSpellBook()->GetActiveSpellEntry()) {
 						if (me->GetSpellBook()->GetActiveSpellEntry()->isAutoAttack()) {
-							this->missileSpeed = me->GetSpellBook()->GetActiveSpellEntry()->GetSpellData()->GetMissileSpeed();
+							this->missileSpeed = me->GetSpellBook()->GetActiveSpellEntry()->GetSpellData()->MissileSpeed;
 						}
 					}
 					ResetAttackTimer();
@@ -489,9 +488,9 @@ public:
 						Orbwalk(getAttackableUnitInRange().at(0), 1);
 		}
 		else {
-			Orbwalk(me, 0);
+		Orbwalk(me, 0);
 		}
-		
+
 	}
 
 	void LastHit() {
@@ -504,78 +503,81 @@ public:
 		else {
 			Orbwalk(me, 0);
 		}
+
 	}
 
 	void Combo() {
 		Engine* engine = new Engine();
 		Console.print("Me pos : %f %f", engine->WorldToScreen(D3DXVECTOR3(me->GetPos().X, me->GetPos().Y, me->GetPos().Z)).x, engine->WorldToScreen(D3DXVECTOR3(me->GetPos().X, me->GetPos().Y, me->GetPos().Z)).y);
 		if (GetTarget(GetHeroes())) {
+
 			/*if (me->GetSpellBook().GetSpellSlotByID(0)->GetTime() == 0) {
 				me->CastSpellTarget(GetTarget(GetHeroes()), 0);
 			}*/
 			//Console.print("%s", me->GetChampionName());
 			//TRISTANA COMBO
-			if (isPartOf("Tristana", me->GetChampionName())) {
-				if (Engine::IsReady(0, me))
-					Engine::CastSpellSelf(0);
 
-				if (Engine::IsReady(2, me))
-					Engine::CastSpellTargetted(2, GetTarget(GetHeroes()));
-
-				if (GetTarget(GetHeroes())->GetHealth() / GetTarget(GetHeroes())->GetMaxHealth() < 0.1f && (Engine::IsReady(3, me))) {
-					if (me->GetSpellBook()->GetSpellSlotByID(3)->GetLevel() == 1 && KSable(GetTarget(GetHeroes()), 300, 0)) {
-						Engine::CastSpellTargetted(3, GetTarget(GetHeroes()));
-					}
-					else if (me->GetSpellBook()->GetSpellSlotByID(3)->GetLevel() == 2 && KSable(GetTarget(GetHeroes()), 400, 0)) {
-						Engine::CastSpellTargetted(3, GetTarget(GetHeroes()));
-					}
-					else if (me->GetSpellBook()->GetSpellSlotByID(3)->GetLevel() == 3 && KSable(GetTarget(GetHeroes()), 500, 0)) {
-						Engine::CastSpellTargetted(3, GetTarget(GetHeroes()));
-					}
-				}
-				
-			}
-			else if (isPartOf("Twitch",me->GetChampionName())) {
-				//if (Engine::IsReady(1,me))
-					//Engine::CastSpellPos(1, GetTarget(GetHeroes())->GetPos());
-			}
-			else if (isPartOf("Ashe", me->GetChampionName())) {
-				if (Engine::IsReady(1,me))
-					Engine::CastSpellPos(1, GetTarget(GetHeroes())->GetPos());		
-			}
-			else if (isPartOf("Kayle", me->GetChampionName())) {
-				if (Engine::IsReady(0, me))
-					Engine::CastSpellTargetted(0, GetTarget(GetHeroes()));
-				if (Engine::IsReady(2, me))
-					Engine::CastSpellSelf(2);
-			}
-			else if (isPartOf("Quinn", me->GetChampionName())) {
-				if (Engine::IsReady(2, me))
-					Engine::CastSpellTargetted(2, GetTarget(GetHeroes()));
-			}
-			else if (isPartOf("MissFortune", me->GetChampionName())) {
-				if (Engine::IsReady(0, me))
-					Engine::CastSpellTargetted(0, GetTarget(GetHeroes()));
-				if (Engine::IsReady(1, me))
-					Engine::CastSpellSelf(1);
-			}
-			else if (isPartOf("Ezreal", me->GetChampionName())) {
-
-				auto pred = new Prediction(new LinePrediction());
-				if (!pred->IsCollisioned(Prediction::CollisionType::Minion, GetTarget(GetHeroes())->GetPos(), 100))
-				{
-				Vector Predict = pred->LinePred->Predict(GetTarget(GetHeroes()), 1150, 2200, 0.1f);
-				if (Predict.X != 0 && Predict.Y != 0 && Predict.Z != 0) {
+				if (isPartOf("Tristana", me->GetChampionName())) {
 					if (Engine::IsReady(0, me))
-						Engine::CastSpellPos(0, Predict);
-				}
+						Engine::CastSpellSelf(0);
+
+					if (Engine::IsReady(2, me))
+						Engine::CastSpellTargetted(2, GetTarget(GetHeroes()));
+
+					if (GetTarget(GetHeroes())->GetHealth() / GetTarget(GetHeroes())->GetMaxHealth() < 0.1f && (Engine::IsReady(3, me))) {
+						if (me->GetSpellBook()->GetSpellSlotByID(3)->GetLevel() == 1 && KSable(GetTarget(GetHeroes()), 300, 0)) {
+							Engine::CastSpellTargetted(3, GetTarget(GetHeroes()));
+						}
+						else if (me->GetSpellBook()->GetSpellSlotByID(3)->GetLevel() == 2 && KSable(GetTarget(GetHeroes()), 400, 0)) {
+							Engine::CastSpellTargetted(3, GetTarget(GetHeroes()));
+						}
+						else if (me->GetSpellBook()->GetSpellSlotByID(3)->GetLevel() == 3 && KSable(GetTarget(GetHeroes()), 500, 0)) {
+							Engine::CastSpellTargetted(3, GetTarget(GetHeroes()));
+						}
+					}
 
 				}
+				else if (isPartOf("Twitch", me->GetChampionName())) {
+					//if (Engine::IsReady(1,me))
+						//Engine::CastSpellPos(1, GetTarget(GetHeroes())->GetPos());
+				}
+				else if (isPartOf("Ashe", me->GetChampionName())) {
+					if (Engine::IsReady(1, me))
+						Engine::CastSpellPos(1, GetTarget(GetHeroes())->GetPos());
+				}
+				else if (isPartOf("Kayle", me->GetChampionName())) {
+					if (Engine::IsReady(0, me))
+						Engine::CastSpellTargetted(0, GetTarget(GetHeroes()));
+					if (Engine::IsReady(2, me))
+						Engine::CastSpellSelf(2);
+				}
+				else if (isPartOf("Quinn", me->GetChampionName())) {
+					if (Engine::IsReady(2, me))
+						Engine::CastSpellTargetted(2, GetTarget(GetHeroes()));
+				}
+				else if (isPartOf("MissFortune", me->GetChampionName())) {
+					if (Engine::IsReady(0, me))
+						Engine::CastSpellTargetted(0, GetTarget(GetHeroes()));
+					if (Engine::IsReady(1, me))
+						Engine::CastSpellSelf(1);
+				}
+				else if (isPartOf("Ezreal", me->GetChampionName())) {
+
+					auto pred = new Prediction(new LinePrediction());
+					if (!pred->IsCollisioned(Prediction::CollisionType::Minion, GetTarget(GetHeroes())->GetPos(), 70))
+					{
+						Vector Predict = pred->LinePred->Predict(GetTarget(GetHeroes()), 1150, 2200, 0.1f);
+						if (Predict.X != 0 && Predict.Y != 0 && Predict.Z != 0) {
+							if (Engine::IsReady(0, me))
+								Engine::CastSpellPos(0, Predict);
+						}
+
+					}
 
 
 
-			}
-			else if (isPartOf("Caitlyn", me->GetChampionName())) {
+				}
+				else if (isPartOf("Caitlyn", me->GetChampionName())) {
 
 
 					auto pred = new Prediction(new LinePrediction());
@@ -586,8 +588,39 @@ public:
 						if (Engine::IsReady(0, me))
 							Engine::CastSpellPos(0, Predict);
 					}
-			
-			}
+
+				}
+				else if (isPartOf("Xayah", me->GetChampionName())) {
+
+					auto pred = new Prediction(new LinePrediction());
+
+
+					Vector Predict = pred->LinePred->Predict(GetTarget(GetHeroes()), 1200 + me->GetBoundingRadius(), 2200, 0.1f);
+					if (Predict.X != 0 && Predict.Y != 0 && Predict.Z != 0) {
+						if (Engine::IsReady(0, me))
+							Engine::CastSpellPos(0, Predict);
+					}
+					if (Engine::IsReady(1, me))
+						Engine::CastSpellSelf(1);
+				}
+				else if (isPartOf("Vayne", me->GetChampionName())) {
+		
+				/*	if (Engine::IsReady(2, me)) {
+
+						
+						float bRange = me->GetAttackRange() / 3;
+						Vector test = GetTarget(GetHeroes())->GetPos() - (GetTarget(GetHeroes())->GetPos() - me->GetPos()) * (550.0f/me->GetPos().DistTo(GetTarget(GetHeroes())->GetPos()));
+						Vector maxERange = Vector(-test.X, -test.Y, -test.Z);
+						Engine* engine = new Engine();
+
+						D3DXVECTOR2 pt1 = (D3DXVECTOR2(maxERange.X, maxERange.Z));
+						D3DXVECTOR2 pt2 = (D3DXVECTOR2(GetTarget(GetHeroes())->GetPos().X, GetTarget(GetHeroes())->GetPos().Z));
+						if (pred->inWall(pt1, pt2)) {
+							Engine::CastSpellTargetted(2, GetTarget(GetHeroes()));
+
+						}
+					}*/
+				}
 			Orbwalk(GetTarget(GetHeroes()), 1);
 		}
 		else {
@@ -595,6 +628,10 @@ public:
 		}
 		
 	}
+
+
+
+
 
 	void Harass() {
 

@@ -74,7 +74,7 @@ DWORD GetDeviceAddress(int VTableIndex)
 }
 
 void __stdcall Start() {
-	//Console.startConsoleWin(80, 25, NULL);
+	Console.startConsoleWin(80, 25, NULL);
 
 	while (Engine::GetGameTime() < 1.0f || !me)
 		Sleep(1);

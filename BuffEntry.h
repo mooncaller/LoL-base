@@ -5,6 +5,11 @@
 class BuffEntry
 {
 public:
+
+	DWORD strptr;
+	bool isBuffEmpty() {
+		return strptr == 0;
+	}
 		bool IsAlive();
 		bool IsValid() {
 			if (this == NULL || (DWORD)this <= 0x1000)
