@@ -31,10 +31,6 @@ public:
 		return Vector{ X, Y, Z };
 	}
 
-	static char* GetGameVersion() {
-		return (char*)(baseAddr + oGameVersion);
-	}
-
 	static float GetGameTime() {
 		return *(float*)(baseAddr + oGameTime);
 	}
@@ -56,7 +52,16 @@ public:
 	}
 
 	static void MoveTo(Vector* pos) {
-		Functions.IssueOrder(GetLocalObject(), 2, pos, NULL, false, false, false);
+		Vector poss = Vector(pos->X, pos->Y, pos->Z);
+		if (GetLocalObject()->GetPos().DistTo(poss) < 150.0f) {
+			Vector test = poss - (poss - me->GetPos()) * (150.0f / me->GetPos().DistTo(poss));
+			Vector maxERange = Vector(-test.X, -test.Y, -test.Z);
+			Functions.IssueOrder(GetLocalObject(), 2, &maxERange, NULL, false, false, false);
+		}
+		else {
+			Functions.IssueOrder(GetLocalObject(), 2, pos, NULL, false, false, false);
+		}
+		
 	}
 
 
@@ -106,6 +111,7 @@ public:
 		return obj->GetSpellBook()->GetSpellSlotByID(slot)->GetLevel() >= 1 && getCD(slot, obj) == 0.0f;
 	}
 
+
 	D3DXMATRIX * D3DXMatrixMultiply(D3DXMATRIX * pOut, const D3DXMATRIX * pM1, const D3DXMATRIX * pM2)
 	{
 		if (pOut == NULL) {
@@ -131,6 +137,7 @@ public:
 
 		return pOut;
 	}
+
 
 	D3DXVECTOR2 WorldToScreen(D3DXVECTOR3 pos)
 	{
@@ -166,5 +173,8 @@ public:
 		return returnVec;
 	}
 
+	static bool IsWall(Vector vec) {
+		return !Functions.IsNotWall(&vec, 0);
+	}
 
 };

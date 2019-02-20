@@ -25,37 +25,37 @@ public:
 		int len = strlen(hexVal);
 
 		// Initializing base value to 1, i.e 16^0 
-		int base = 1;
+int base = 1;
 
-		int dec_val = 0;
+int dec_val = 0;
 
-		// Extracting characters as digits from last character 
-		for (int i = len - 1; i >= 0; i--)
-		{
-			// if character lies in '0'-'9', converting  
-			// it to integral 0-9 by subtracting 48 from 
-			// ASCII value. 
-			if (hexVal[i] >= '0' && hexVal[i] <= '9')
-			{
-				dec_val += (hexVal[i] - 48)*base;
+// Extracting characters as digits from last character 
+for (int i = len - 1; i >= 0; i--)
+{
+	// if character lies in '0'-'9', converting  
+	// it to integral 0-9 by subtracting 48 from 
+	// ASCII value. 
+	if (hexVal[i] >= '0' && hexVal[i] <= '9')
+	{
+		dec_val += (hexVal[i] - 48)*base;
 
-				// incrementing base by power 
-				base = base * 16;
-			}
+		// incrementing base by power 
+		base = base * 16;
+	}
 
-			// if character lies in 'A'-'F' , converting  
-			// it to integral 10 - 15 by subtracting 55  
-			// from ASCII value 
-			else if (hexVal[i] >= 'A' && hexVal[i] <= 'F')
-			{
-				dec_val += (hexVal[i] - 55)*base;
+	// if character lies in 'A'-'F' , converting  
+	// it to integral 10 - 15 by subtracting 55  
+	// from ASCII value 
+	else if (hexVal[i] >= 'A' && hexVal[i] <= 'F')
+	{
+		dec_val += (hexVal[i] - 55)*base;
 
-				// incrementing base by power 
-				base = base * 16;
-			}
-		}
+		// incrementing base by power 
+		base = base * 16;
+	}
+}
 
-		return dec_val;
+return dec_val;
 	}
 
 	bool ObjectAttacking(CObject* obj) {
@@ -66,7 +66,15 @@ public:
 
 	CObjectManager* ObjManager;
 
-	 Prediction* pred = new Prediction(new LinePrediction());
+
+	bool InAutoAttackRange(CObject* target)
+	{
+		Engine* en = new Engine();
+		float myRange = me->GetAttackRange() + me->GetBoundingRadius() + target->GetBoundingRadius();
+		float dist = (me->GetPos().X - target->GetPos().X)*(me->GetPos().X - target->GetPos().X) + (me->GetPos().Z - target->GetPos().Z)*(me->GetPos().Z - target->GetPos().Z);
+		return (dist <= myRange * myRange);
+	}
+
 	std::vector<CObject*> getAttackableUnitInRange() {
 		std::vector<CObject*> objets;
 		if (ObjManager) {
@@ -74,9 +82,32 @@ public:
 
 				CObject* obj = Engine::GetObjectByID(i);
 				if (obj) {
-					if (obj->IsHero() || obj->IsMinion() || obj->IsTurret() || obj->IsNexus()) {
-						if (obj->IsAlive() && obj->IsVisible() && obj->GetTeam() != me->GetTeam() && obj->IsTargetable() && obj->GetMaxHealth()<15000.0f) {
-							if (me->GetPos().DistTo(obj->GetPos()) < me->GetAttackRange() + me->GetBoundingRadius() + obj->GetBoundingRadius()) {
+					if (obj->IsHero() || obj->IsMinion() || obj->IsTurret()) {
+						if (obj->IsAlive() && obj->GetTeam() != me->GetTeam() && obj->IsTargetable() && obj->GetMaxHealth() < 15000.0f) {
+							if (InAutoAttackRange(obj)) {
+								objets.push_back(obj);
+							}
+						}
+					}
+
+				}
+			}
+		}
+		return objets;
+	};
+
+	std::vector<CObject*> getAttackableUnitInRange(float range) {
+		std::vector<CObject*> objets;
+		if (ObjManager) {
+			for (int i = 0; i < 10000; i++) {
+
+				CObject* obj = Engine::GetObjectByID(i);
+				if (obj) {
+					if (obj->IsHero() || obj->IsMinion() || obj->IsTurret()) {
+						if (obj->IsAlive() && obj->GetTeam() != me->GetTeam() && obj->IsTargetable() && obj->GetMaxHealth() < 15000.0f) {
+							float myRange = range + me->GetBoundingRadius() + obj->GetBoundingRadius();
+							float dist = (me->GetPos().X - obj->GetPos().X)*(me->GetPos().X - obj->GetPos().X) + (me->GetPos().Z - obj->GetPos().Z)*(me->GetPos().Z - obj->GetPos().Z);
+							if (dist <= myRange * myRange) {
 								objets.push_back(obj);
 							}
 						}
@@ -96,9 +127,9 @@ public:
 	{
 		movetimer = Engine::GetGameTime();
 	};
-	void ResetAttackTimer()
+	void ResetAttackTimer(float t)
 	{
-		attacktimer = Engine::GetGameTime();
+		attacktimer = Engine::GetGameTime() + t;
 	};
 
 	double CalcAttackDelay()
@@ -114,15 +145,10 @@ public:
 		return Functions.GetAttackCastDelay(me);
 
 	};
+
 	bool AttackReady()
 	{
-		if (CalcAttackDelay() > CalcAttackTime())
-		{
-			return true;
-		}
-		else {
-			return false;
-		}
+		return Engine::GetGameTime() + 0.055 >= attacktimer + CalcAttackTime();
 	};
 
 
@@ -183,6 +209,16 @@ public:
 	std::vector<CObject*> GetHeroes() {
 		std::vector<CObject*> objets;
 		for (CObject* obj : getAttackableUnitInRange()) {
+			if (Functions.IsHero(obj)) {
+				objets.push_back(obj);
+			}
+		}
+		return objets;
+	};
+
+	std::vector<CObject*> GetHeroes(float range) {
+		std::vector<CObject*> objets;
+		for (CObject* obj : getAttackableUnitInRange(range)) {
 			if (Functions.IsHero(obj)) {
 				objets.push_back(obj);
 			}
@@ -324,8 +360,8 @@ public:
 		Priorities["Zed"] = 4;
 		Priorities["Ziggs"] = 4;
 		Priorities["Zilean"] = 3;
-		Priorities["Zyra"] = 1;
-
+		Priorities["Zyra"] = 3;
+		Priorities["Sylas"] = 3;
 		if (Priorities[target->GetChampionName()]) {
 			if (Priorities[target->GetChampionName()] == 5)
 				return 2.5;
@@ -344,15 +380,28 @@ public:
 	}
 
 	float calculateDamage(CObject* from, CObject* to, float rawDamage) {
-		return 1;
+		float adMultiplier = 0.0f;
+		float armor = to->GetArmor();
+
+		if (armor > 0)
+			adMultiplier = 100 / (100 + armor);
+		else
+			adMultiplier = 2 - (100 / (100 - armor));
+
+		return ((adMultiplier*from->GetTotalAttackDamage()));
 
 	}
+
+	bool isUndying(CObject* target) {
+
+	}
+
 	CObject* GetTarget(std::vector<CObject*> targets) {
 		CObject* selected = nullptr;
 		float max = 0;
 		if (targets.size() > 0) {
 			for (CObject* target : targets) {
-				if ((getReductedPriority(target)*calculateDamage(me, target, me->GetTotalAttackDamage()) / target->GetHealth()) > max) {
+				if ((getReductedPriority(target)*calculateDamage(me, target, me->GetTotalAttackDamage()) / (target->GetHealth()*0.8f)) > max /*&& !isUndying(target)*/) {
 					//Console.print("Nom: %s \n", target->GetName());
 					max = (getReductedPriority(target)*calculateDamage(me, target, me->GetTotalAttackDamage()) / target->GetHealth());
 					selected = target;
@@ -425,12 +474,28 @@ public:
 		}
 
 	CObject* GetLastHittableMinion() {		
+		std::vector<CObject*> objets;
+		if (ObjManager) {
+			for (int i = 0; i < 10000; i++) {
 
-		std::vector<CObject*> objectsInRange = getAttackableUnitInRange();
+				CObject* obj = Engine::GetObjectByID(i);
+				if (obj) {
+					if (obj->IsMinion()) {
+						if (obj->IsAlive() && obj->GetTeam() != me->GetTeam() && obj->IsTargetable() && obj->GetMaxHealth() < 15000.0f) {
+							if (me->GetPos().DistTo(obj->GetPos()) < me->GetAttackRange() + me->GetBoundingRadius() + obj->GetBoundingRadius()) {
+								objets.push_back(obj);
+							}
+						}
+					}
+
+				}
+			}
+		}
+		std::vector<CObject*> objectsInRange = objets;
 		for (CObject* minion : objectsInRange) {
 			float hPred = minion->GetHealth();
 
-			float lasthittime = MAX((me->GetPos().DistTo(minion->GetPos())-me->GetBoundingRadius()),0) / this->missileSpeed + CalcAttackCast();
+			float lasthittime = MAX((me->GetPos().DistTo(minion->GetPos())-me->GetBoundingRadius()),0) / this->missileSpeed + CalcAttackCast() - 0.1f;
 			hPred -= KSable(minion,GetPredictedDamages(minion, lasthittime),1);
 
 
@@ -440,14 +505,38 @@ public:
 		}
 		return nullptr;
 	}
+	float resetAAtimer = 0.0f;
+	float castTimeAAreset = 0.0f;
+	bool ResetAutoAttackReady() {
+		if (Engine::GetGameTime() >= resetAAtimer + castTimeAAreset) {
+			return true;
+		}
+		return false;
+	}
 
 	void Orbwalk(CObject* Target, bool hasTarget)
 	{
+
+		if (isPartOf("Vayne", me->GetChampionName())) {
+			if (me->GetSpellBook()->GetActiveSpellEntry()) {
+				if (isPartOf(me->GetSpellBook()->GetActiveSpellEntry()->GetSpellData()->SpellName, "VayneTumble")) {
+					this->ResetAttackTimer(0.0f);
+				}
+			}
+		}/*
+		Console.print("AttackTimer : %f, AttackReady : %i\n", this->attacktimer, this->AttackReady());
+		if (isPartOf("Lucian", me->GetChampionName())) {
+			if (me->GetSpellBook()->GetSpellSlotByID(2)->GetTime() - Engine::GetGameTime() == 0.0f) {
+				resetAAtimer = Engine::GetGameTime();
+			}
+		}*/
+
 		if (!hasTarget) {
 			Engine::MoveTo(new Vector(Engine::GetMouseWorldPosition()));
 
 		}
 		else {
+
 			if (AttackReady() && getAttackableUnitInRange().size() > 0)
 			{
 					
@@ -455,13 +544,17 @@ public:
 					if (me->GetSpellBook()->GetActiveSpellEntry()) {
 						if (me->GetSpellBook()->GetActiveSpellEntry()->isAutoAttack()) {
 							this->missileSpeed = me->GetSpellBook()->GetActiveSpellEntry()->GetSpellData()->MissileSpeed;
+							this->ResetAttackTimer(0.0f);
 						}
+
 					}
-					ResetAttackTimer();
+					
+		
+					
 			}
-			if (!AttackReady() && getAttackableUnitInRange().size() > 0)
+		    if (!AttackReady() && getAttackableUnitInRange().size() > 0)
 			{
-				if (CalcAttackCast() + 0.08f  < CalcAttackDelay())
+				if (CalcAttackCast() < CalcAttackDelay() + 0.03)
 				{
 					//Console.print("AttackDelay: %f |AttackCastDelay: %f | Engine::GetGameTime(): %f\n", CalcAttackCast(), CalcAttackDelay(), CalcAttackCast() + 0.2f);
 					Engine::MoveTo(new Vector(Engine::GetMouseWorldPosition()));
@@ -484,7 +577,7 @@ public:
 		else if (GetTarget(GetHeroes())) {
 			Orbwalk(GetTarget(GetHeroes()), 1);
 		}
-		else if (getAttackableUnitInRange().size() > 0) {
+		if (getAttackableUnitInRange().size() > 0) {
 						Orbwalk(getAttackableUnitInRange().at(0), 1);
 		}
 		else {
@@ -508,8 +601,8 @@ public:
 
 	void Combo() {
 		Engine* engine = new Engine();
-		Console.print("Me pos : %f %f", engine->WorldToScreen(D3DXVECTOR3(me->GetPos().X, me->GetPos().Y, me->GetPos().Z)).x, engine->WorldToScreen(D3DXVECTOR3(me->GetPos().X, me->GetPos().Y, me->GetPos().Z)).y);
-		if (GetTarget(GetHeroes())) {
+
+	if (GetTarget(GetHeroes())) {
 
 			/*if (me->GetSpellBook().GetSpellSlotByID(0)->GetTime() == 0) {
 				me->CastSpellTarget(GetTarget(GetHeroes()), 0);
@@ -521,7 +614,7 @@ public:
 					if (Engine::IsReady(0, me))
 						Engine::CastSpellSelf(0);
 
-					if (Engine::IsReady(2, me))
+					if (Engine::IsReady(2, me) && !AttackReady())
 						Engine::CastSpellTargetted(2, GetTarget(GetHeroes()));
 
 					if (GetTarget(GetHeroes())->GetHealth() / GetTarget(GetHeroes())->GetMaxHealth() < 0.1f && (Engine::IsReady(3, me))) {
@@ -538,8 +631,7 @@ public:
 
 				}
 				else if (isPartOf("Twitch", me->GetChampionName())) {
-					//if (Engine::IsReady(1,me))
-						//Engine::CastSpellPos(1, GetTarget(GetHeroes())->GetPos());
+
 				}
 				else if (isPartOf("Ashe", me->GetChampionName())) {
 					if (Engine::IsReady(1, me))
@@ -597,30 +689,37 @@ public:
 
 					Vector Predict = pred->LinePred->Predict(GetTarget(GetHeroes()), 1200 + me->GetBoundingRadius(), 2200, 0.1f);
 					if (Predict.X != 0 && Predict.Y != 0 && Predict.Z != 0) {
-						if (Engine::IsReady(0, me))
+						if (Engine::IsReady(0, me) && !this->AttackReady())
 							Engine::CastSpellPos(0, Predict);
 					}
 					if (Engine::IsReady(1, me))
 						Engine::CastSpellSelf(1);
 				}
 				else if (isPartOf("Vayne", me->GetChampionName())) {
-		
-				/*	if (Engine::IsReady(2, me)) {
 
-						
+					this->castTimeAAreset = 0.225f;
+					if (Engine::IsReady(2, me)) {
+
+						CObject* target = GetTarget(GetHeroes());
 						float bRange = me->GetAttackRange() / 3;
-						Vector test = GetTarget(GetHeroes())->GetPos() - (GetTarget(GetHeroes())->GetPos() - me->GetPos()) * (550.0f/me->GetPos().DistTo(GetTarget(GetHeroes())->GetPos()));
+						Vector test = target->GetPos() - (target->GetPos() - me->GetPos()) * (500.0f/me->GetPos().DistTo(target->GetPos()));
 						Vector maxERange = Vector(-test.X, -test.Y, -test.Z);
-						Engine* engine = new Engine();
-
-						D3DXVECTOR2 pt1 = (D3DXVECTOR2(maxERange.X, maxERange.Z));
-						D3DXVECTOR2 pt2 = (D3DXVECTOR2(GetTarget(GetHeroes())->GetPos().X, GetTarget(GetHeroes())->GetPos().Z));
-						if (pred->inWall(pt1, pt2)) {
-							Engine::CastSpellTargetted(2, GetTarget(GetHeroes()));
+						if (Engine::IsWall(maxERange)) {
+							Engine::CastSpellTargetted(2, target);
 
 						}
-					}*/
+					}
 				}
+				else if (isPartOf("Lucian", me->GetChampionName())) {
+					this->castTimeAAreset = 0.1f;
+					if (Engine::IsReady(0, me))
+						Engine::CastSpellTargetted(0, GetTarget(GetHeroes()));
+				}
+				else if (isPartOf("Teemo", me->GetChampionName())) {
+				if (Engine::IsReady(0, me))
+					Engine::CastSpellTargetted(0, GetTarget(GetHeroes()));
+				}
+
 			Orbwalk(GetTarget(GetHeroes()), 1);
 		}
 		else {
@@ -631,7 +730,24 @@ public:
 
 
 
+	void Poppy() {
+					if (!strcmp(me->GetChampionName(), "Poppy")) {
+						if (GetTarget(GetHeroes(475.0f))) {
+							if (Engine::IsReady(2, me)) {
 
+								CObject* target = GetTarget(GetHeroes(475.0f));
+									Vector test = target->GetPos() - (target->GetPos() - me->GetPos()) * (525.0f / me->GetPos().DistTo(target->GetPos()));
+									Vector maxERange = Vector(-test.X, -test.Y, -test.Z);
+									if (Engine::IsWall(maxERange)) {
+										Engine::CastSpellTargetted(2, target);
+
+									}
+							}
+						}
+
+
+				}
+	}
 
 	void Harass() {
 

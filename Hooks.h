@@ -21,6 +21,7 @@ public:
 
 	typedef bool(__thiscall* fnIsAlive)(CObject* pObj);
 	typedef bool(__thiscall* fnIsTargetable)(CObject* pObj);
+	typedef bool(__cdecl* fnIsNotWall)(Vector*, unsigned __int16);
 };
 
 class CFunctions {
@@ -42,6 +43,7 @@ public:
 	Typedefs::fnDrawCircle DrawCircle;
 	Typedefs::fnCastSpell CastSpell;
 	Typedefs::fnPrintChat PrintChat;
+	Typedefs::fnIsNotWall IsNotWall;
 };
 
 extern CFunctions Functions;

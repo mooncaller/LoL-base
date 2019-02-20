@@ -108,7 +108,8 @@ public:
 		return (CSpellBook*)((DWORD)this + oObjSpellBook);
 	}
 
-	BuffManager* GetBuffManager() {
+
+	BuffManager* GetBuffMgr() {
 		return (BuffManager*)((DWORD)this + oObjBuffMgr);
 	}
 

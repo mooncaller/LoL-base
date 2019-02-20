@@ -21,30 +21,40 @@ HRESULT WINAPI Hooked_Present(DWORD Device, CONST RECT *pSrcRect, CONST RECT *pD
 	/*if (me->GetSpellBook()->GetActiveSpellEntry()) {
 		Console.print("Missile speed : %f", me->GetSpellBook()->GetActiveSpellEntry()->GetSpellData()->GetMissileSpeed());
 	}*/
-	if (GetAsyncKeyState(VK_SPACE) < 0)
-	{
+	if (me) {
+		if (me->IsAlive()) {
+			orb->Poppy();
+		}
+	}
+
+		
+
+		if (GetAsyncKeyState(VK_SPACE) < 0)
+		{
 			//Console.print("Missile speed : %f, %f , %f", me->GetAIManager()->GetVelocity().X, me->GetAIManager()->GetVelocity().Y, me->GetAIManager()->GetVelocity().Z);
-		if (me) {
-			if (!bInit) {
-				bInit = true;
+			if (me) {
+				if (!bInit) {
+					bInit = true;
+				}
+				if (me->IsAlive()) {
+					orb->Combo();
+				}
 			}
-			if (me->IsAlive()) {
-				orb->Combo();
-			}
+
+
+
+
+		}
+		if (GetAsyncKeyState(0x56) < 0) { // 0x56 = V Key
+
+			orb->LaneClear();
+		}
+		if (GetAsyncKeyState(0x43) < 0) { // 0x43 = C Key
+
+			orb->LastHit();
 		}
 
-
-
-
-	}
-	if (GetAsyncKeyState(0x56) < 0) { // 0x56 = V Key
-		
-		orb->LaneClear();
-	}
-	if (GetAsyncKeyState(0x43) < 0) { // 0x43 = C Key
-
-		orb->LastHit();
-	}
+	
 
 	return Original_Present(Device, pSrcRect, pDestRect, hDestWindow, pDirtyRegion);
 }
@@ -74,7 +84,7 @@ DWORD GetDeviceAddress(int VTableIndex)
 }
 
 void __stdcall Start() {
-	Console.startConsoleWin(80, 25, NULL);
+	//Console.startConsoleWin(80, 25, NULL);
 
 	while (Engine::GetGameTime() < 1.0f || !me)
 		Sleep(1);
@@ -98,7 +108,7 @@ void __stdcall Start() {
 	Functions.CastSpell = (Typedefs::fnCastSpell)((DWORD)GetModuleHandle(NULL) + oCastSpell);
 	Functions.IssueOrder = (Typedefs::fnIssueOrder)((DWORD)GetModuleHandle(NULL) + oIssueOrder);
 	Functions.DrawCircle = (Typedefs::fnDrawCircle)((DWORD)GetModuleHandle(NULL) + oDrawCircle);
-
+	Functions.IsNotWall = (Typedefs::fnIsNotWall)((DWORD)GetModuleHandle(NULL) + oIsNotWall); 
 	Functions.GetAttackCastDelay = (Typedefs::fnGetAttackCastDelay)((DWORD)GetModuleHandle(NULL) + oGetAttackCastDelay);
 	Functions.GetAttackDelay = (Typedefs::fnGetAttackDelay)((DWORD)GetModuleHandle(NULL) + oGetAttackDelay);
 

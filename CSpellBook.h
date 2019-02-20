@@ -15,7 +15,7 @@ public:
 	}
 
 	SpellSlot* GetSpellSlotByID(int ID) {
-		return *(SpellSlot**)((DWORD)this + 0x530 + (0x4 * ID));
+		return *(SpellSlot**)((DWORD)this + 0x518 + (0x4 * ID));
 	}
 };
 

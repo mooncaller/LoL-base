@@ -145,7 +145,8 @@ public:
 	float Coefficient; //0x0200
 	float Coefficient2; //0x0204
 	int32_t MaxHighlightTargets; //0x0208
-	char pad_020C[116]; //0x020C
+	char pad_020C[70]; //0x020C
+	float castTime; // 0x027C
 	FLOAT CooldownTime[7]; //0x0280
 	float DelayCastOffsetPercent; //0x029C
 	float DelayTotalTimePercent; //0x02A0
