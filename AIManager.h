@@ -21,6 +21,9 @@ public:
 		 return *(BYTE*)((DWORD)this + O_AIMGR_HASNAVPATH) == 1;
 	 }
 
+	 bool IsMoving() {
+		 return *(bool*)((DWORD)this + O_AIMGR_ISMOVING);
+	 }
 
 	std::vector<Vector*> getPathList() {
 		std::vector<Vector*> test;

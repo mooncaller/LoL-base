@@ -24,6 +24,8 @@ HRESULT WINAPI Hooked_Present(DWORD Device, CONST RECT *pSrcRect, CONST RECT *pD
 	if (me) {
 		if (me->IsAlive()) {
 			orb->Poppy();
+			//orb->Kalista();
+			orb->autoWCaitlyn();
 		}
 	}
 
@@ -108,7 +110,7 @@ void __stdcall Start() {
 	Functions.CastSpell = (Typedefs::fnCastSpell)((DWORD)GetModuleHandle(NULL) + oCastSpell);
 	Functions.IssueOrder = (Typedefs::fnIssueOrder)((DWORD)GetModuleHandle(NULL) + oIssueOrder);
 	Functions.DrawCircle = (Typedefs::fnDrawCircle)((DWORD)GetModuleHandle(NULL) + oDrawCircle);
-	Functions.IsNotWall = (Typedefs::fnIsNotWall)((DWORD)GetModuleHandle(NULL) + oIsNotWall); 
+	//Functions.IsNotWall = (Typedefs::fnIsNotWall)((DWORD)GetModuleHandle(NULL) + oIsNotWall); 
 	Functions.GetAttackCastDelay = (Typedefs::fnGetAttackCastDelay)((DWORD)GetModuleHandle(NULL) + oGetAttackCastDelay);
 	Functions.GetAttackDelay = (Typedefs::fnGetAttackDelay)((DWORD)GetModuleHandle(NULL) + oGetAttackDelay);
 

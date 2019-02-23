@@ -23,7 +23,7 @@ enum BuffType{
 	SpellImmunity = 15,
 	PhysicalImmunity = 16,
 	Invulnerability = 17,
-	//Sleep = 18,
+	Sleepp = 18,
 	NearSight = 19,
 	Frenzy = 20,
 	Fear = 21,

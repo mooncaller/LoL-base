@@ -21,11 +21,6 @@ public:
 			if (!pBuff) continue;
 			if (!pBuff->IsValid()) continue;
 			if (pBuff->IsAlive()) {
-				Console.print("Buff found: %s, type : %i \n", pBuff->GetBuffName(), pBuff->getBuffType());
-				if (pBuff->getBuffType() == BuffType::Stun) {
-					Console.print("c'est un stun !!");
-				}
-				Console.print("%i `\n", i);
 				if (!strcmp(pBuff->GetBuffName(), BuffName)) {
 					return pBuff;
 				}
@@ -33,5 +28,22 @@ public:
 			
 		}
 		return NULL;
+	}
+
+	bool IsImmobile(int Type) {
+		int i = -1;
+		for (DWORD pBuffPtr = this->pStart; pBuffPtr != this->pEnd; pBuffPtr += 0x8)
+		{
+			auto pBuff = *(BuffEntry**)pBuffPtr;
+			i++;
+			if (!pBuff) continue;
+			if (!pBuff->IsValid()) continue;
+			if (pBuff->IsAlive()) {
+				if (pBuff->getBuffType() == Type)
+					return true;
+			}
+
+		}
+		return false;
 	}
 };

@@ -71,6 +71,15 @@ return dec_val;
 	{
 		Engine* en = new Engine();
 		float myRange = me->GetAttackRange() + me->GetBoundingRadius() + target->GetBoundingRadius();
+		
+		if (this->isPartOf("Caitlyn", me->GetChampionName()))
+		{
+			if (target->GetBuffMgr())
+			{
+				if (target->GetBuffMgr()->GetBuffEntryByName("caitlynyordletrapinternal"))
+					myRange += 650;
+			}
+		}
 		float dist = (me->GetPos().X - target->GetPos().X)*(me->GetPos().X - target->GetPos().X) + (me->GetPos().Z - target->GetPos().Z)*(me->GetPos().Z - target->GetPos().Z);
 		return (dist <= myRange * myRange);
 	}
@@ -437,6 +446,43 @@ return dec_val;
 		return false;
 	}
 
+	float LaneClearPred(CObject* minion, float time) {
+		float hpPred = 0;
+		if (ObjManager) {
+			for (int i = 0; i < 10000; i++) {
+
+				CObject* obj = Engine::GetObjectByID(i);
+				if (obj) {
+					if (obj->IsMinion()) {
+						if (obj->GetSpellBook()) {
+							if (obj->GetSpellBook()->GetActiveSpellEntry()) {
+								if (obj->GetSpellBook()->GetActiveSpellEntry()->targetID() == minion->GetNetworkID() && obj->GetSpellBook()->GetActiveSpellEntry()->isAutoAttack()) {
+									int n = 0;
+									float startAttack = Engine::GetGameTime();
+									float endAttack = Engine::GetGameTime() + time;
+									while (startAttack < endAttack) {
+										float MissileSpeed = obj->GetSpellBook()->GetActiveSpellEntry()->GetSpellData()->MissileSpeed;
+										if (startAttack >= Engine::GetGameTime() && (startAttack + MAX((obj->GetSpellBook()->GetActiveSpellEntry()->GetStartPos().DistTo(obj->GetSpellBook()->GetActiveSpellEntry()->GetEndPos()) - obj->GetBoundingRadius()), 0) / MissileSpeed + Functions.GetAttackCastDelay(obj) < endAttack)){
+
+											n++;
+									}
+										startAttack += Functions.GetAttackCastDelay(obj);
+		
+
+								}
+									hpPred += n* obj->GetTotalAttackDamage();
+							}
+						}
+
+					}
+				}
+
+			}
+		}
+		return hpPred;
+	}
+	}
+
 	float GetPredictedDamages(CObject* minion, float time){
 		float hpPred = 0;
 		if (ObjManager) {
@@ -449,15 +495,11 @@ return dec_val;
 							if (obj->GetSpellBook()->GetActiveSpellEntry()) {
 								if (obj->GetSpellBook()->GetActiveSpellEntry()->targetID() == minion->GetNetworkID() && obj->GetSpellBook()->GetActiveSpellEntry()->isAutoAttack()) {
 
-									if (obj->GetAttackRange() < 150.0f) {
-										hpPred += obj->GetTotalAttackDamage();
-									}
-									else {
 										float MissileSpeed = obj->GetSpellBook()->GetActiveSpellEntry()->GetSpellData()->MissileSpeed;
-										float timeImpact = ((obj->GetSpellBook()->GetActiveSpellEntry()->GetStartPos().DistTo(obj->GetSpellBook()->GetActiveSpellEntry()->GetEndPos())) - obj->GetBoundingRadius()) / MissileSpeed;
+										float timeImpact = MAX((obj->GetSpellBook()->GetActiveSpellEntry()->GetStartPos().DistTo(obj->GetSpellBook()->GetActiveSpellEntry()->GetEndPos()) - obj->GetBoundingRadius()), 0) / MissileSpeed + Functions.GetAttackCastDelay(obj);
 										if (timeImpact < time) {
 											hpPred += obj->GetTotalAttackDamage();
-										}
+										
 									}
 
 
@@ -474,37 +516,44 @@ return dec_val;
 		}
 
 	CObject* GetLastHittableMinion() {		
-		std::vector<CObject*> objets;
-		if (ObjManager) {
-			for (int i = 0; i < 10000; i++) {
+		
+		std::vector<CObject*> objectsInRange = this->getAttackableUnitInRange();
+		for (CObject* minion : objectsInRange) {
+			if (minion->IsMinion()) {
+				float hPred = minion->GetHealth();
 
-				CObject* obj = Engine::GetObjectByID(i);
-				if (obj) {
-					if (obj->IsMinion()) {
-						if (obj->IsAlive() && obj->GetTeam() != me->GetTeam() && obj->IsTargetable() && obj->GetMaxHealth() < 15000.0f) {
-							if (me->GetPos().DistTo(obj->GetPos()) < me->GetAttackRange() + me->GetBoundingRadius() + obj->GetBoundingRadius()) {
-								objets.push_back(obj);
-							}
-						}
-					}
+				float lasthittime = MAX((me->GetPos().DistTo(minion->GetPos()) - me->GetBoundingRadius()), 0) / this->missileSpeed + CalcAttackCast() - 0.1f;
+				hPred -= KSable(minion, GetPredictedDamages(minion, lasthittime), 1);
 
+
+				if (hPred <= 0 || isLastHittable(minion)) {
+					return minion;
 				}
 			}
-		}
-		std::vector<CObject*> objectsInRange = objets;
-		for (CObject* minion : objectsInRange) {
-			float hPred = minion->GetHealth();
 
-			float lasthittime = MAX((me->GetPos().DistTo(minion->GetPos())-me->GetBoundingRadius()),0) / this->missileSpeed + CalcAttackCast() - 0.1f;
-			hPred -= KSable(minion,GetPredictedDamages(minion, lasthittime),1);
-
-
-			if (hPred <= 0 || isLastHittable(minion)) {
-				return minion;
-			}
 		}
 		return nullptr;
 	}
+
+	bool ShouldWait() {
+		std::vector<CObject*> objectsInRange = this->getAttackableUnitInRange();
+		for (CObject* minion : objectsInRange) {
+			if (minion->IsMinion()) {
+				float hPred = minion->GetHealth();
+
+				float time = Functions.GetAttackDelay(me);
+				hPred -= KSable(minion, this->LaneClearPred(minion, time), 1);
+
+
+				if (hPred <= KSable(minion, me->GetTotalAttackDamage(), 1)) {
+					return true;
+				}
+			}
+
+		}
+		return false;
+	}
+
 	float resetAAtimer = 0.0f;
 	float castTimeAAreset = 0.0f;
 	bool ResetAutoAttackReady() {
@@ -523,7 +572,15 @@ return dec_val;
 					this->ResetAttackTimer(0.0f);
 				}
 			}
+		}
+		if (isPartOf("Lucian", me->GetChampionName())) {
+			if (me->GetSpellBook()->GetActiveSpellEntry()) {
+				if (isPartOf(me->GetSpellBook()->GetActiveSpellEntry()->GetSpellData()->SpellName, "LucianQ")) {
+					this->ResetAttackTimer(0.0f);
+				}
+			}
 		}/*
+
 		Console.print("AttackTimer : %f, AttackReady : %i\n", this->attacktimer, this->AttackReady());
 		if (isPartOf("Lucian", me->GetChampionName())) {
 			if (me->GetSpellBook()->GetSpellSlotByID(2)->GetTime() - Engine::GetGameTime() == 0.0f) {
@@ -570,15 +627,36 @@ return dec_val;
 	};
 
 
+
+	CObject* getLaneClearMinion() {
+		std::vector<CObject*> objectsInRange = this->getAttackableUnitInRange();
+		for (CObject* minion : objectsInRange) {
+			if (minion->IsMinion()) {
+				float hPred = minion->GetHealth();
+
+				float time = Functions.GetAttackDelay(me);
+				hPred -= KSable(minion, this->LaneClearPred(minion, time), 1);
+
+
+				if (hPred >= 2 * KSable(minion, me->GetTotalAttackDamage(), 1)) {
+					return minion;
+				}
+			}
+
+		}
+		return nullptr;
+	}
 	void LaneClear() {
-		if (GetLastHittableMinion()) {
-			Orbwalk(GetLastHittableMinion(), 1);
+		if (this->GetLastHittableMinion()) {
+			Orbwalk(this->GetLastHittableMinion(), 1);
 		}
-		else if (GetTarget(GetHeroes())) {
+		else if (this->getLaneClearMinion()) {
+			Orbwalk(this->getLaneClearMinion(), 1);
+		}
+
+		
+		else if (GetTarget(GetHeroes()) && !this->ShouldWait()) {
 			Orbwalk(GetTarget(GetHeroes()), 1);
-		}
-		if (getAttackableUnitInRange().size() > 0) {
-						Orbwalk(getAttackableUnitInRange().at(0), 1);
 		}
 		else {
 		Orbwalk(me, 0);
@@ -601,7 +679,11 @@ return dec_val;
 
 	void Combo() {
 		Engine* engine = new Engine();
-
+		if (me->GetBuffMgr()) {
+			if (me->GetBuffMgr()->GetBuffEntryByName("kalistaexpungemarker")) {
+				CObject* p = me;
+			}
+		}
 	if (GetTarget(GetHeroes())) {
 
 			/*if (me->GetSpellBook().GetSpellSlotByID(0)->GetTime() == 0) {
@@ -669,17 +751,24 @@ return dec_val;
 
 
 				}
-				else if (isPartOf("Caitlyn", me->GetChampionName())) {
-
+				else if (isPartOf("Kalista", me->GetChampionName())) {
 
 					auto pred = new Prediction(new LinePrediction());
+					if (!pred->IsCollisioned(Prediction::CollisionType::Minion, GetTarget(GetHeroes())->GetPos(), 70))
+					{
+						Vector Predict = pred->LinePred->Predict(GetTarget(GetHeroes()), 1150, 2100, 0.1f);
+						if (Predict.X != 0 && Predict.Y != 0 && Predict.Z != 0) {
+							if (Engine::IsReady(0, me))
+								Engine::CastSpellPos(0, Predict);
+						}
 
-
-					Vector Predict = pred->LinePred->Predict(GetTarget(GetHeroes()), 1250, 2200, 0.555f);
-					if (Predict.X != 0 && Predict.Y != 0 && Predict.Z != 0) {
-						if (Engine::IsReady(0, me))
-							Engine::CastSpellPos(0, Predict);
 					}
+
+
+
+				}
+				else if (isPartOf("Caitlyn", me->GetChampionName())) {
+
 
 				}
 				else if (isPartOf("Xayah", me->GetChampionName())) {
@@ -704,16 +793,31 @@ return dec_val;
 						float bRange = me->GetAttackRange() / 3;
 						Vector test = target->GetPos() - (target->GetPos() - me->GetPos()) * (500.0f/me->GetPos().DistTo(target->GetPos()));
 						Vector maxERange = Vector(-test.X, -test.Y, -test.Z);
-						if (Engine::IsWall(maxERange)) {
+						/*if (Engine::IsWall(maxERange)) {
 							Engine::CastSpellTargetted(2, target);
 
-						}
+						}*/
 					}
 				}
 				else if (isPartOf("Lucian", me->GetChampionName())) {
-					this->castTimeAAreset = 0.1f;
-					if (Engine::IsReady(0, me))
-						Engine::CastSpellTargetted(0, GetTarget(GetHeroes()));
+					if (me->GetBuffMgr()) {
+						if (!me->GetBuffMgr()->GetBuffEntryByName("lucianpassivebuff")) {
+							this->castTimeAAreset = 0.1f;
+							if (Engine::IsReady(0, me))
+								Engine::CastSpellTargetted(0, GetTarget(GetHeroes()));
+							auto pred = new Prediction(new LinePrediction());
+							if (!pred->IsCollisioned(Prediction::CollisionType::Minion, GetTarget(GetHeroes())->GetPos(), 70))
+							{
+								Vector Predict = pred->LinePred->Predict(GetTarget(GetHeroes()), 900, me->GetSpellBook()->GetSpellSlotByID(1)->GetSpellData()->MissileSpeed, 0.25f);
+								if (Predict.X != 0 && Predict.Y != 0 && Predict.Z != 0) {
+									if (Engine::IsReady(1, me))
+										Engine::CastSpellPos(1, Predict);
+								}
+
+							}
+						}
+					}
+
 				}
 				else if (isPartOf("Teemo", me->GetChampionName())) {
 				if (Engine::IsReady(0, me))
@@ -738,10 +842,10 @@ return dec_val;
 								CObject* target = GetTarget(GetHeroes(475.0f));
 									Vector test = target->GetPos() - (target->GetPos() - me->GetPos()) * (525.0f / me->GetPos().DistTo(target->GetPos()));
 									Vector maxERange = Vector(-test.X, -test.Y, -test.Z);
-									if (Engine::IsWall(maxERange)) {
+									/*if (Engine::IsWall(maxERange)) {
 										Engine::CastSpellTargetted(2, target);
 
-									}
+									}*/
 							}
 						}
 
@@ -753,6 +857,139 @@ return dec_val;
 
 	};
 
-};
+	float damageKalistaE(int buffCount) {
+		float damageE = 0.0f;
+		switch (me->GetSpellBook()->GetSpellSlotByID(2)->GetLevel()) {
+		case 1:
+			damageE = 20 + 0.6f* me->GetTotalAttackDamage() + (buffCount - 1) * (10 + 0.2f*me->GetTotalAttackDamage());
+			break;
+		case 2:
+			damageE = 30 + 0.6f* me->GetTotalAttackDamage() + (buffCount - 1) * (14 + 0.2375f*me->GetTotalAttackDamage());
+			break;
+		case 3:
+			damageE = 40 + 0.6f* me->GetTotalAttackDamage() + (buffCount - 1) * (19 + 0.275f*me->GetTotalAttackDamage());
+			break;
+		case 4:
+			damageE = 50 + 0.6f* me->GetTotalAttackDamage() + (buffCount - 1) * (25 + 0.3125f*me->GetTotalAttackDamage());
+			break;
+		case 5:
+			damageE = 60 + 0.6f* me->GetTotalAttackDamage() + (buffCount - 1) * (32 + 0.35f*me->GetTotalAttackDamage());
+			break;
+		}
+		return damageE;
+	}
 
+	void Kalista() {
+		if (!strcmp(me->GetChampionName(), "Kalista")) {
+			if (Engine::IsReady(2, me)) {
+				std::vector<CObject*> obj = this->getAttackableUnitInRange(1150.0f);
+				for (CObject* o : obj) {
+					if (o->GetBuffMgr()) {
+						if (o->GetBuffMgr()->GetBuffEntryByName("kalistaexpungemarker")) {
+							BuffEntry* buff = o->GetBuffMgr()->GetBuffEntryByName("kalistaexpungemarker");
+							float damageE = this->damageKalistaE(buff->GetBuffCountInt());
+
+							Console.print("dmg : %f\n", damageE);
+							if (this->KSable(o, damageE, 1)) {
+								Engine::CastSpellTargetted(2, o);
+							}
+						}
+					}
+				}
+
+			}
+		}
+	}
+	
+	void autoWCaitlyn() {
+		if (isPartOf("Caitlyn", me->GetChampionName())) {
+
+
+			Prediction* pred = new Prediction();
+
+			if (Engine::IsReady(1, me)) {
+				for (CObject* target : this->GetHeroes(800.0f)) {
+
+					if (target->GetBuffMgr()) {
+					
+						if (target->GetBuffMgr()->IsImmobile(22)) {
+							Engine::CastSpellPos(1, pred->LinePred->Predict(GetTarget(GetHeroes()), 850 + target->GetBoundingRadius(), 100000.0f, 0.2f));
+						}
+						else if (target->GetBuffMgr()->IsImmobile(8)) {
+							Engine::CastSpellPos(1, pred->LinePred->Predict(GetTarget(GetHeroes()), 850 + target->GetBoundingRadius(), 100000.0f, 0.2f));
+						}
+						else if (target->GetBuffMgr()->IsImmobile(28)) {
+							Engine::CastSpellPos(1, pred->LinePred->Predict(GetTarget(GetHeroes()), 800 + target->GetBoundingRadius(), 100000.0f, 0.2f));
+						}
+						else if (target->GetBuffMgr()->IsImmobile(29)) {
+							Engine::CastSpellPos(1, target->GetPos());
+						}
+						else if (target->GetBuffMgr()->IsImmobile(5)) {
+							Engine::CastSpellPos(1, target->GetPos());
+						}
+						else if (target->GetBuffMgr()->IsImmobile(11)) {
+							Engine::CastSpellPos(1, target->GetPos());
+						}
+					}
+				}
+			}
+
+			if (Engine::IsReady(0, me) && !this->AttackReady()) {
+				for (CObject* target : this->GetHeroes(1250.0f)) {
+
+					if (target->GetBuffMgr()) {
+						if (target->GetBuffMgr()->IsImmobile(22)) {
+							Engine::CastSpellPos(0, pred->LinePred->Predict(GetTarget(GetHeroes()), 1250.0f + target->GetBoundingRadius(), 100000.0f, 0.2f));
+						}
+						else if (target->GetBuffMgr()->IsImmobile(8)) {
+							Engine::CastSpellPos(0, pred->LinePred->Predict(GetTarget(GetHeroes()), 1250.0f + target->GetBoundingRadius(), 100000.0f, 0.2f));
+						}
+						else if (target->GetBuffMgr()->IsImmobile(28)) {
+							Engine::CastSpellPos(0, pred->LinePred->Predict(GetTarget(GetHeroes()), 1250.0f + target->GetBoundingRadius(), 100000.0f, 0.2f));
+						}
+						else if (target->GetBuffMgr()->IsImmobile(29)) {
+							Engine::CastSpellPos(0, target->GetPos());
+						}
+						else if (target->GetBuffMgr()->IsImmobile(5)) {
+							Engine::CastSpellPos(0, target->GetPos());
+						}
+						else if (target->GetBuffMgr()->IsImmobile(11)) {
+							Engine::CastSpellPos(0, target->GetPos());
+						}
+					}
+
+				}
+			}
+			if (Engine::IsReady(2, me) && !this->AttackReady()) {
+
+					for (CObject* target : this->GetHeroes(950.0f)) {
+
+						if (target->GetBuffMgr()) {
+							if (target->GetBuffMgr()->IsImmobile(22)) {
+								Engine::CastSpellPos(2, pred->LinePred->Predict(GetTarget(GetHeroes()), 950.0f + target->GetBoundingRadius(), 100000.0f, 0.2f));
+							}
+							else if (target->GetBuffMgr()->IsImmobile(8)) {
+								Engine::CastSpellPos(2, pred->LinePred->Predict(GetTarget(GetHeroes()), 950.0f + target->GetBoundingRadius(), 100000.0f, 0.2f));
+							}
+							else if (target->GetBuffMgr()->IsImmobile(28)) {
+								Engine::CastSpellPos(2, pred->LinePred->Predict(GetTarget(GetHeroes()), 950.0f + target->GetBoundingRadius(), 100000.0f, 0.2f));
+							}
+							else if (target->GetBuffMgr()->IsImmobile(29)) {
+								Engine::CastSpellPos(2, target->GetPos());
+							}
+							else if (target->GetBuffMgr()->IsImmobile(5)) {
+								Engine::CastSpellPos(2, target->GetPos());
+							}
+							else if (target->GetBuffMgr()->IsImmobile(11)) {
+								Engine::CastSpellPos(2, target->GetPos());
+							}
+						}
+
+					}
+
+				
+			}
+		}
+	}
+};
 
