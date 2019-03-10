@@ -46,4 +46,55 @@ public:
 		}
 		return false;
 	}
+
+	bool isPartOf(char* w1, char* w2)
+	{
+		int i = 0;
+		int j = 0;
+
+
+		while (w1[i] != '\0') {
+			if (w1[i] == w2[j])
+			{
+				int init = i;
+				while (w1[i] == w2[j] && w2[j] != '\0')
+				{
+					j++;
+					i++;
+				}
+				if (w2[j] == '\0') {
+					return true;
+				}
+				j = 0;
+			}
+			i++;
+		}
+		return false;
+	}
+
+
+	bool IsPoisoned() {
+		int i = -1;
+		for (DWORD pBuffPtr = this->pStart; pBuffPtr != this->pEnd; pBuffPtr += 0x8)
+		{
+			auto pBuff = *(BuffEntry**)pBuffPtr;
+			i++;
+			if (!pBuff) continue;
+			if (!pBuff->IsValid()) continue;
+			if (pBuff->IsAlive()) {
+				Console.print("%s \n", pBuff->GetBuffName());
+				if (isPartOf(pBuff->GetBuffName(), "oison"))
+					return true;
+			}
+
+		}
+		return false;
+	}
+
+	bool IsImmobile() {
+		if (this->IsImmobile(22) || IsImmobile(8) || IsImmobile(28) || IsImmobile(29) || IsImmobile(5) || IsImmobile(11)) {
+			return true;
+		}
+		return false;
+	}
 };

@@ -72,7 +72,7 @@ Vector CirclePrediction::Calculate(CObject * target, float range, float missiles
 {
 
 
-	float t = Vector((target->GetPos() - me->GetPos())).length() / missilespeed;
+	float t = 0.0f;
 	t += casttime;
 	Vector veloc = target->GetAIManager()->GetVelocity();
 	veloc.X = 0;

@@ -23,6 +23,14 @@ public:
 		return *(short*)((DWORD)this + oObjIndex);
 	}
 
+	float GetMana() {
+		return *(float*)((DWORD)this + oObjMana);
+	}
+	
+	float GetMaxMana() {
+		return *(float*)((DWORD)this + oObjMaxMana);
+	}
+
 	short GetTargetIndex() {
 		return *(short*)((DWORD)this + oObjTargetID);
 	}
@@ -77,7 +85,7 @@ public:
 
 	float GetBoundingRadius() {
 		typedef float(__thiscall* OriginalFn)(PVOID);
-		return CallVirtual<OriginalFn>(this, 36)(this);
+		return CallVirtual<OriginalFn>(this, 37)(this);
 	}
 
 	bool IsEnemyTo(CObject* Obj) {

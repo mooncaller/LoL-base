@@ -26,6 +26,7 @@ HRESULT WINAPI Hooked_Present(DWORD Device, CONST RECT *pSrcRect, CONST RECT *pD
 			orb->Poppy();
 			//orb->Kalista();
 			orb->autoWCaitlyn();
+			orb->autoQSivir();
 		}
 	}
 
@@ -40,6 +41,7 @@ HRESULT WINAPI Hooked_Present(DWORD Device, CONST RECT *pSrcRect, CONST RECT *pD
 				}
 				if (me->IsAlive()) {
 					orb->Combo();
+					//Console.print("%f \n", me->GetBoundingRadius());
 				}
 			}
 

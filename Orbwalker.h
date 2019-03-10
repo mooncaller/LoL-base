@@ -579,7 +579,14 @@ return dec_val;
 					this->ResetAttackTimer(0.0f);
 				}
 			}
-		}/*
+		}
+		if (isPartOf("Sivir", me->GetChampionName())) {
+			if (Engine::GetGameTime()-me->GetSpellBook()->GetSpellSlotByID(1)->GetTime()==0.0f) {
+					this->ResetAttackTimer(0.0f);
+			}
+		}
+
+		/*
 
 		Console.print("AttackTimer : %f, AttackReady : %i\n", this->attacktimer, this->AttackReady());
 		if (isPartOf("Lucian", me->GetChampionName())) {
@@ -611,7 +618,7 @@ return dec_val;
 			}
 		    if (!AttackReady() && getAttackableUnitInRange().size() > 0)
 			{
-				if (CalcAttackCast() < CalcAttackDelay() + 0.03)
+				if (CalcAttackCast() < CalcAttackDelay() + 0.015)
 				{
 					//Console.print("AttackDelay: %f |AttackCastDelay: %f | Engine::GetGameTime(): %f\n", CalcAttackCast(), CalcAttackDelay(), CalcAttackCast() + 0.2f);
 					Engine::MoveTo(new Vector(Engine::GetMouseWorldPosition()));
@@ -669,6 +676,7 @@ return dec_val;
 			Orbwalk(GetLastHittableMinion(), 1);
 		}
 		else if (GetTarget(GetHeroes())) {
+			this->Harass();
 			Orbwalk(GetTarget(GetHeroes()), 1);
 		}
 		else {
@@ -720,12 +728,12 @@ return dec_val;
 						Engine::CastSpellPos(1, GetTarget(GetHeroes())->GetPos());
 				}
 				else if (isPartOf("Kayle", me->GetChampionName())) {
-					if (Engine::IsReady(0, me))
+					if (Engine::IsReady(0, me) &&!this->AttackReady())
 						Engine::CastSpellTargetted(0, GetTarget(GetHeroes()));
 					if (Engine::IsReady(2, me))
 						Engine::CastSpellSelf(2);
 				}
-				else if (isPartOf("Quinn", me->GetChampionName())) {
+				else if (isPartOf("Quinn", me->GetChampionName()) && !this->AttackReady()) {
 					if (Engine::IsReady(2, me))
 						Engine::CastSpellTargetted(2, GetTarget(GetHeroes()));
 				}
@@ -823,7 +831,28 @@ return dec_val;
 				if (Engine::IsReady(0, me))
 					Engine::CastSpellTargetted(0, GetTarget(GetHeroes()));
 				}
+				else if (isPartOf("Sivir", me->GetChampionName())) {
+				if (Engine::IsReady(1, me) && !this->AttackReady())
+					Engine::CastSpellSelf(1);
+				}
+				else if (isPartOf("Cassiopeia", me->GetChampionName())) {
+					auto pred = new Prediction(new LinePrediction());
+					CObject* o = (GetTarget(GetHeroes(850.0f)));
+					if (o->GetBuffMgr()) {
+						if (o->GetBuffMgr()->GetBuffEntryByName("cassiopeiaqdebuff") || o->GetBuffMgr()->GetBuffEntryByName("cassiopeiawpoison")) {
+							if (Engine::IsReady(2, me)) {
+								Engine::CastSpellTargetted(2, o);
+							}
+						}
+						else {
+							if (Engine::IsReady(0, me)) {
+								Vector Predict = pred->LinePred->Calculate(GetTarget(GetHeroes()), 850 + GetTarget(GetHeroes())->GetBoundingRadius(), 10000000000000.0f, 0.55f);
+								Engine::CastSpellPos(0, Predict);
+							}
+						}
 
+					}
+				}
 			Orbwalk(GetTarget(GetHeroes()), 1);
 		}
 		else {
@@ -854,7 +883,16 @@ return dec_val;
 	}
 
 	void Harass() {
-
+		if (isPartOf("Cassiopeia", me->GetChampionName()) && me->GetMana()/me->GetMaxMana()>0.25f) {
+			CObject* o = GetTarget(GetHeroes(850.0f));
+			if (o->GetAIManager()) {
+				if (!o->GetAIManager()->IsMoving()) {
+					if (Engine::IsReady(0, me)) {
+						Engine::CastSpellPos(0, o->GetPos());
+					}
+				}
+			}
+		}
 	};
 
 	float damageKalistaE(int buffCount) {
@@ -900,96 +938,112 @@ return dec_val;
 			}
 		}
 	}
-	
-	void autoWCaitlyn() {
-		if (isPartOf("Caitlyn", me->GetChampionName())) {
+
+	void autoQSivir() {
+		if (isPartOf("Sivir", me->GetChampionName())) {
 
 
-			Prediction* pred = new Prediction();
-
-			if (Engine::IsReady(1, me)) {
-				for (CObject* target : this->GetHeroes(800.0f)) {
-
-					if (target->GetBuffMgr()) {
-					
-						if (target->GetBuffMgr()->IsImmobile(22)) {
-							Engine::CastSpellPos(1, pred->LinePred->Predict(GetTarget(GetHeroes()), 850 + target->GetBoundingRadius(), 100000.0f, 0.2f));
-						}
-						else if (target->GetBuffMgr()->IsImmobile(8)) {
-							Engine::CastSpellPos(1, pred->LinePred->Predict(GetTarget(GetHeroes()), 850 + target->GetBoundingRadius(), 100000.0f, 0.2f));
-						}
-						else if (target->GetBuffMgr()->IsImmobile(28)) {
-							Engine::CastSpellPos(1, pred->LinePred->Predict(GetTarget(GetHeroes()), 800 + target->GetBoundingRadius(), 100000.0f, 0.2f));
-						}
-						else if (target->GetBuffMgr()->IsImmobile(29)) {
-							Engine::CastSpellPos(1, target->GetPos());
-						}
-						else if (target->GetBuffMgr()->IsImmobile(5)) {
-							Engine::CastSpellPos(1, target->GetPos());
-						}
-						else if (target->GetBuffMgr()->IsImmobile(11)) {
-							Engine::CastSpellPos(1, target->GetPos());
-						}
-					}
-				}
-			}
-
-			if (Engine::IsReady(0, me) && !this->AttackReady()) {
+			if (Engine::IsReady(0, me)) {
 				for (CObject* target : this->GetHeroes(1250.0f)) {
 
 					if (target->GetBuffMgr()) {
-						if (target->GetBuffMgr()->IsImmobile(22)) {
-							Engine::CastSpellPos(0, pred->LinePred->Predict(GetTarget(GetHeroes()), 1250.0f + target->GetBoundingRadius(), 100000.0f, 0.2f));
-						}
-						else if (target->GetBuffMgr()->IsImmobile(8)) {
-							Engine::CastSpellPos(0, pred->LinePred->Predict(GetTarget(GetHeroes()), 1250.0f + target->GetBoundingRadius(), 100000.0f, 0.2f));
-						}
-						else if (target->GetBuffMgr()->IsImmobile(28)) {
-							Engine::CastSpellPos(0, pred->LinePred->Predict(GetTarget(GetHeroes()), 1250.0f + target->GetBoundingRadius(), 100000.0f, 0.2f));
-						}
-						else if (target->GetBuffMgr()->IsImmobile(29)) {
-							Engine::CastSpellPos(0, target->GetPos());
+
+						if (target->GetBuffMgr()->IsImmobile(29)) {
+							if (Engine::IsReady(0, me))
+								Engine::CastSpellPos(1, target->GetPos());
+							break;
 						}
 						else if (target->GetBuffMgr()->IsImmobile(5)) {
-							Engine::CastSpellPos(0, target->GetPos());
+							if (Engine::IsReady(0, me))
+								Engine::CastSpellPos(1, target->GetPos());
+							break;
 						}
 						else if (target->GetBuffMgr()->IsImmobile(11)) {
-							Engine::CastSpellPos(0, target->GetPos());
+							if (Engine::IsReady(0, me))
+								Engine::CastSpellPos(1, target->GetPos());
+							break;
 						}
 					}
-
 				}
 			}
-			if (Engine::IsReady(2, me) && !this->AttackReady()) {
 
-					for (CObject* target : this->GetHeroes(950.0f)) {
+		}
+		if (isPartOf("Jinx", me->GetChampionName())) {
+			if (Engine::IsReady(1, me) && !this->AttackReady()) {
+				for (CObject* target : this->GetHeroes(1250.0f)) {
 
-						if (target->GetBuffMgr()) {
-							if (target->GetBuffMgr()->IsImmobile(22)) {
-								Engine::CastSpellPos(2, pred->LinePred->Predict(GetTarget(GetHeroes()), 950.0f + target->GetBoundingRadius(), 100000.0f, 0.2f));
-							}
-							else if (target->GetBuffMgr()->IsImmobile(8)) {
-								Engine::CastSpellPos(2, pred->LinePred->Predict(GetTarget(GetHeroes()), 950.0f + target->GetBoundingRadius(), 100000.0f, 0.2f));
-							}
-							else if (target->GetBuffMgr()->IsImmobile(28)) {
-								Engine::CastSpellPos(2, pred->LinePred->Predict(GetTarget(GetHeroes()), 950.0f + target->GetBoundingRadius(), 100000.0f, 0.2f));
-							}
-							else if (target->GetBuffMgr()->IsImmobile(29)) {
-								Engine::CastSpellPos(2, target->GetPos());
-							}
-							else if (target->GetBuffMgr()->IsImmobile(5)) {
-								Engine::CastSpellPos(2, target->GetPos());
-							}
-							else if (target->GetBuffMgr()->IsImmobile(11)) {
-								Engine::CastSpellPos(2, target->GetPos());
-							}
+					if (target->GetBuffMgr()) {
+
+						if (target->GetBuffMgr()->IsImmobile(29)) {
+							if (Engine::IsReady(1, me))
+								Engine::CastSpellPos(1, target->GetPos());
+							break;
 						}
-
+						else if (target->GetBuffMgr()->IsImmobile(5)) {
+							if (Engine::IsReady(1, me))
+								Engine::CastSpellPos(1, target->GetPos());
+							break;
+						}
+						else if (target->GetBuffMgr()->IsImmobile(11)) {
+							if (Engine::IsReady(1, me))
+								Engine::CastSpellPos(1, target->GetPos());
+							break;
+						}
 					}
-
-				
+				}
 			}
 		}
 	}
+		void autoWCaitlyn() {
+			if (isPartOf("Caitlyn", me->GetChampionName())) {
+
+
+				if (Engine::IsReady(1, me)) {
+					for (CObject* target : this->GetHeroes(800.0f)) {
+
+						if (target->GetBuffMgr()) {
+
+							if (target->GetBuffMgr()->IsImmobile(29)) {
+								if (Engine::IsReady(1, me))
+									Engine::CastSpellPos(1, target->GetPos());
+								break;
+							}
+							else if (target->GetBuffMgr()->IsImmobile(5)) {
+								if (Engine::IsReady(1, me))
+									Engine::CastSpellPos(1, target->GetPos());
+								break;
+							}
+							else if (target->GetBuffMgr()->IsImmobile(11)) {
+								if (Engine::IsReady(1, me)) 
+									Engine::CastSpellPos(1, target->GetPos());
+									break;
+							}
+						}
+					}
+				}
+
+				if (Engine::IsReady(0, me) && !this->AttackReady()) {
+					for (CObject* target : this->GetHeroes(1250.0f)) {
+
+						if (target->GetBuffMgr()) {
+							if (target->GetBuffMgr()->IsImmobile(29)) {
+								if (Engine::IsReady(0, me))
+									Engine::CastSpellPos(0, target->GetPos());
+							}
+							else if (target->GetBuffMgr()->IsImmobile(5)) {
+								if (Engine::IsReady(0, me))
+									Engine::CastSpellPos(0, target->GetPos());
+							}
+							else if (target->GetBuffMgr()->IsImmobile(11)) {
+								if (Engine::IsReady(0, me))
+									Engine::CastSpellPos(0, target->GetPos());
+							}
+						}
+
+					}
+				}
+
+			}
+		}
 };
 
